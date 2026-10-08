@@ -7,10 +7,12 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="theme-color" content="#f58aa0">
-<title>日本管家 v0.9.93</title>
+<title>日本管家 v0.9.100</title>
 <style>
 *{box-sizing:border-box}
 :root{--ink:#4b3f46;--paper:#fffaf0;--paper2:#fffdf8;--pink:#ffb7c9;--blue:#a9d9ff;--yellow:#ffe58c;--green:#bfe7c4;--purple:#cbb9f4;--shadow:#d9c9b9}
+
+.usage-guide-btn{position:absolute;top:14px;right:14px;z-index:3;border:1px solid #ead6dc;background:#fff;border-radius:999px;padding:9px 13px;font-weight:800;color:#8a5968;box-shadow:0 3px 10px rgba(120,70,90,.08);cursor:pointer}.hero{position:relative}
 body{margin:0;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;background:var(--paper);background-image:radial-gradient(#ead8c8 1.1px,transparent 1.1px);background-size:17px 17px;overflow-x:hidden}
 body:before{content:"✦ 𖦹 ✎ 𓂃 ✿";position:fixed;top:74px;right:-8px;color:#f1b7c7;opacity:.35;font-size:22px;letter-spacing:10px;transform:rotate(8deg);pointer-events:none;z-index:0}
 header{background:#fff5d9;color:var(--ink);padding:15px 16px 14px;position:sticky;top:0;z-index:20;border-bottom:3px solid var(--ink);box-shadow:0 4px 0 rgba(75,63,70,.08)}
@@ -143,10 +145,6 @@ nav{position:fixed;bottom:0;left:0;right:0;min-height:76px;background:#fff8e9;bo
 
 @media(max-width:420px){.phrase-cat-grid{grid-template-columns:1fr 1fr}.phrase-cat-btn{font-size:14px}}
 
-.live-translate-card{border:1px solid #ddd;border-radius:14px;padding:14px;margin:12px 0;background:rgba(127,127,127,.06)}
-.live-translate-card textarea{width:100%;box-sizing:border-box;min-height:88px}
-.live-translate-output{margin:12px 0;padding:14px;border-radius:12px;background:rgba(127,127,127,.10);min-height:70px}
-.live-result-main{font-size:22px;font-weight:700;margin-bottom:12px;line-height:1.5}
 </style>
 <style id="v0953-route-ui">
 .day-summary-route{display:flex!important;flex-direction:column!important;gap:4px!important;line-height:1.4}
@@ -234,9 +232,31 @@ nav{position:fixed;bottom:0;left:0;right:0;min-height:76px;background:#fff8e9;bo
 .emergency-warning{padding:9px 11px;border-radius:10px;background:#fff4e8;margin:10px 0;font-weight:700}
 .emergency-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.emergency-grid>div{padding:9px;border:1px solid #eee;border-radius:10px}
 @media(max-width:560px){.emergency-grid{grid-template-columns:1fr}}
-.japan-note-line{display:flex;gap:10px;align-items:flex-start;padding:10px 2px;border-bottom:2px dotted #e1d4cb;font-size:17px;line-height:1.6}.japan-note-number{flex:0 0 30px;font-weight:900;text-align:right}.japan-note-line>span:nth-child(2){flex:1;min-width:0}.japan-note-custom{background:#fff9df;border-radius:10px;padding-left:8px;padding-right:8px;margin:5px 0;border-bottom:0}.japan-note-delete{flex:0 0 auto;padding:5px 8px;font-size:11px;background:#fff0f5}@media(max-width:560px){.japan-note-line{font-size:16px;gap:8px}.japan-note-number{flex-basis:27px}}</style></head>
+.japan-note-line{display:flex;gap:10px;align-items:flex-start;padding:10px 2px;border-bottom:2px dotted #e1d4cb;font-size:17px;line-height:1.6}.japan-note-number{flex:0 0 30px;font-weight:900;text-align:right}.japan-note-line>span:nth-child(2){flex:1;min-width:0}.japan-note-custom{background:#fff9df;border-radius:10px;padding-left:8px;padding-right:8px;margin:5px 0;border-bottom:0}.japan-note-delete{flex:0 0 auto;padding:5px 8px;font-size:11px;background:#fff0f5}@media(max-width:560px){.japan-note-line{font-size:16px;gap:8px}.japan-note-number{flex-basis:27px}}
+/* v0.9.98 App 內建使用說明 */
+.usage-guide-modal{position:fixed;inset:0;background:rgba(34,24,24,.72);z-index:99999;display:none;padding:14px;box-sizing:border-box;overscroll-behavior:contain}
+.usage-guide-modal.show{display:flex;align-items:center;justify-content:center}
+body.usage-guide-open{overflow:hidden}
+.usage-guide-shell{width:min(980px,100%);height:min(92vh,900px);background:#fffaf6;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 18px 60px rgba(0,0,0,.28)}
+.usage-guide-head{display:flex;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(135deg,#fff0f4,#fffaf0);border-bottom:1px solid #eadbd5;flex:0 0 auto}
+.usage-guide-head h2{margin:0;font-size:20px;font-weight:900;flex:1}
+.usage-guide-close{border:0;background:#fff;border-radius:12px;padding:8px 11px;font-size:17px}
+.usage-guide-body{display:flex;min-height:0;flex:1}
+.usage-guide-toc{width:172px;flex:0 0 172px;overflow-y:auto;overflow-x:hidden;padding:10px;background:#fff4f6;border-right:1px solid #eadbd5;overscroll-behavior:contain}
+.usage-guide-toc button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:7px 8px;margin-bottom:3px;border-radius:9px;font-size:13px;line-height:1.25;font-weight:800;color:#4d3a3a;box-shadow:none}
+.usage-guide-toc button:active,.usage-guide-toc button:hover,.usage-guide-toc button.active{background:#ffe0e8}
+.usage-guide-pages{overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;padding:16px 18px 86px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scroll-behavior:smooth;touch-action:pan-y}
+.usage-guide-page{background:#fff;border:1px solid #eadbd5;border-radius:20px;padding:22px;margin-bottom:16px;min-height:180px;scroll-margin-top:12px;box-shadow:0 3px 14px rgba(80,50,50,.06)}
+.usage-guide-page h3{font-size:25px;margin:0 0 15px;font-weight:950;color:#5b303d}
+.usage-guide-page p,.usage-guide-page li{font-size:20px;line-height:1.65;color:#403636}
+.usage-guide-page ul{margin:0;padding-left:25px}.usage-guide-page .guide-tip{background:#fff5cf;border-radius:14px;padding:12px 15px;font-weight:800;margin-top:14px}
+.usage-guide-index{display:inline-flex;align-items:center;justify-content:center;min-width:29px;height:29px;border-radius:9px;background:#f58aa0;color:#fff;font-weight:900;margin-right:8px}
+.usage-guide-nav{position:sticky;bottom:0;display:flex;justify-content:space-between;gap:10px;padding:10px 0 0;margin-top:4px;background:linear-gradient(to bottom,rgba(255,250,246,0),#fffaf6 22%);z-index:2}
+.usage-guide-nav button{flex:1;max-width:190px;padding:9px 12px;background:#fff;border:2px solid #7b5b67;box-shadow:2px 3px 0 #d8c8bb}
+@media(max-width:680px){.usage-guide-modal{padding:7px}.usage-guide-shell{height:94vh;border-radius:18px}.usage-guide-head{padding:10px 12px}.usage-guide-head h2{font-size:18px}.usage-guide-body{display:flex;flex-direction:column;min-height:0}.usage-guide-toc{width:100%;height:70px;flex:0 0 70px;border-right:0;border-bottom:1px solid #eadbd5;display:flex;overflow-x:auto;overflow-y:hidden;gap:5px;padding:7px;scrollbar-width:none}.usage-guide-toc::-webkit-scrollbar{display:none}.usage-guide-toc button{min-width:122px;width:auto;flex:0 0 122px;padding:6px 7px;margin:0;font-size:12px;line-height:1.2}.usage-guide-pages{height:auto;min-height:0;flex:1;padding:12px 12px 78px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}.usage-guide-page{padding:18px;margin-bottom:13px}.usage-guide-page h3{font-size:23px}.usage-guide-page p,.usage-guide-page li{font-size:18px}.usage-guide-nav{padding-top:7px}.usage-guide-nav button{font-size:14px;padding:8px 9px}}
+</style></head>
 <body>
-<header><h1>🇯🇵 日本管家</h1><small>v0.9.95｜日本旅行管家</small></header>
+<header><h1>🇯🇵 日本管家</h1><small>v0.9.100｜日本旅行管家</small></header>
 <main id="app"></main><div id="pilLightbox" class="pil-lightbox" onclick="if(event.target===this)closePilImage()"><div class="pil-lightbox-inner"><button class="pil-lightbox-close" onclick="closePilImage()">✕</button><div id="pilLightboxTitle" class="pil-lightbox-title"></div><img id="pilLightboxImg" alt="現場圖片"><div id="pilLightboxCaption" class="pil-lightbox-caption"></div><div class="pil-lightbox-actions"><button class="soft" onclick="closePilImage()">↩ 返回聖地列表</button><button class="soft" onclick="openExternal(document.getElementById('pilLightboxImg').src)">↗ 新分頁開啟</button></div></div></div>
 <div id="mapModal" class="map-modal" onclick="if(event.target===this)closeMapModal()"><div class="map-modal-panel"><div class="map-modal-head"><b id="mapModalTitle">🚆 交通路線圖</b><button class="soft" onclick="closeMapModal()">✕ 關閉</button></div><div id="mapModalBody" class="map-modal-body"></div></div></div>
 <nav>
@@ -996,6 +1016,7 @@ function home(){
  const concert=data.concert.date?`🎤 演唱會：${esc(data.concert.date)}｜${esc(data.concert.venue||"東京巨蛋")}`:"🎤 演唱會資訊尚未設定";
  const remain=data.settings.budget?Number(data.settings.budget)-total:null;
  return `<div class="hero">
+ <button class="usage-guide-btn" onclick="openUsageGuide()">📖 使用說明</button>
  <h2>🇯🇵 東京旅行準備中 ✈️</h2>
  <p>2026 年 11 月｜東京旅行｜以超特急東京巨蛋為核心</p>
  <div class="stat"><div><b>${ds.length}</b>天</div><div><b>${data.plans.length}</b>個行程</div><div><b>¥${total.toLocaleString()}</b>花費</div></div>
@@ -2234,7 +2255,26 @@ function addConcertToPlan(i){let d=(data.concert.dates||[])[i],date=d&&d.date;if
 function saveConcert(){data.concert={...data.concert,venue:document.getElementById('cv').value.trim(),ticket:document.getElementById('ct').value.trim(),note:document.getElementById('cn').value.trim()};save()}
 
 function ensureSongOverridesV083(){if(!Array.isArray(data.songs))data.songs=[];}
+function ensureCustomSongsV099(){if(!Array.isArray(data.customSongs))data.customSongs=[];}
 function songOverrideV083(title){ensureSongOverridesV083();return data.songs.find(x=>x.title===title)||{};}
+function addCustomSongV099(){
+ ensureCustomSongsV099();
+ const title=prompt('🎵 歌曲名稱'); if(title===null||!title.trim())return;
+ const call=prompt('📣 你想要的應援／Call（可留白）',''); if(call===null)return;
+ const note=prompt('📝 備註（可留白）',''); if(note===null)return;
+ const video=prompt('🎬 應援／Call影片網址（可留白）',''); if(video===null)return;
+ data.customSongs.push({id:uid(),title:title.trim(),call:call.trim(),note:note.trim(),video:video.trim()});
+ save(); alert('已加入你的歌單／應援！');
+}
+function editCustomSongV099(i){
+ ensureCustomSongsV099(); const x=data.customSongs[i]; if(!x)return;
+ const title=prompt('🎵 歌曲名稱',x.title||''); if(title===null||!title.trim())return;
+ const call=prompt('📣 你想要的應援／Call（可留白）',x.call||''); if(call===null)return;
+ const note=prompt('📝 備註（可留白）',x.note||''); if(note===null)return;
+ const video=prompt('🎬 應援／Call影片網址（可留白）',x.video||''); if(video===null)return;
+ data.customSongs[i]={...x,title:title.trim(),call:call.trim(),note:note.trim(),video:video.trim()}; save();
+}
+function deleteCustomSongV099(i){ensureCustomSongsV099();const x=data.customSongs[i];if(!x)return;if(confirm(`確定要刪除「${x.title}」嗎？`)){data.customSongs.splice(i,1);save();}}
 function editSongV083(i){
  const predicted=window.__predictedSongsV083||[]; const x=predicted[i]; if(!x)return;
  const o=songOverrideV083(x[0]);
@@ -2280,6 +2320,11 @@ function support(){
   ['Party Maker','代代木東京公演曾作為安可，粉絲也有提到再出現的可能。','fan','']
  ];
  window.__predictedSongsV083=predicted;
+ const customRows=(()=>{
+   ensureCustomSongsV099();
+   if(!data.customSongs.length)return '';
+   return `<div class="card" style="margin:12px 0 0"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h3 style="margin:0">🎵 我的歌單／應援</h3><button class="soft" style="padding:5px 10px;font-size:13px" onclick="addCustomSongV099()">＋新增</button></div><div class="song-list-v084" style="margin-top:10px">${data.customSongs.map((x,i)=>`<details class="song-row-v084"><summary>${esc(x.title)}</summary><div class="song-detail-v084"><div class="song-actions">${x.call?`<div class="notice">📣 <b>應援／Call：</b>${esc(x.call)}</div>`:''}${x.video?`<button class="primary" onclick="event.preventDefault();openExternal('${x.video.replace(/'/g,"%27")}','_blank')">🎬 看應援影片</button>`:''}<button class="soft" onclick="event.preventDefault();editCustomSongV099(${i})">✏️ 編輯</button><button class="soft" onclick="event.preventDefault();deleteCustomSongV099(${i})">🗑️ 刪除</button></div>${x.note?`<div class="notice">📝 我的備註：${esc(x.note)}</div>`:''}</div></details>`).join('')}</div></div>`;
+ })();
  const rows=predicted.map((x,i)=>{
    const o=songOverrideV083(x[0]);
    const video=o.video||x[3]||'';
@@ -2295,10 +2340,10 @@ function support(){
    </div>${note?`<div class="notice">📝 我的備註：${esc(note)}</div>`:''}</div></details>`;
  }).join('');
  return `<div class="card"><h2>🎤 超特急『BULLET TRAIN 1st DOME LIVE Signal』應援小助手</h2><p><b>2026/11/25、11/26｜東京巨蛋｜16:00 入場／18:00 開演</b></p><div class="notice">⚠️ <b>這裡的歌單是「8號車預測歌單」，不是官方歌單。</b>之後找到更適合的影片、圖片或文章，可以直接在該首歌展開後按「✏️ 編輯這首」替換。</div></div>
- <div class="card"><h2>🎵 東京巨蛋「8號車預測歌單」</h2><div class="song-list-v084">${rows}</div><div class="notice">📌 目前沒有官方 Setlist。預測只作為預習參考。</div></div>
+ <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h2 style="margin:0">🎵 東京巨蛋「8號車預測歌單」</h2><button class="soft" style="padding:5px 10px;font-size:13px;white-space:nowrap" onclick="addCustomSongV099()">＋新增</button></div><div class="song-list-v084" style="margin-top:10px">${rows}</div><div class="notice">📌 目前沒有官方 Setlist。預測只作為預習參考。</div></div>${customRows}
  <div class="card"><h2>📣 Call／手燈：先練這幾首</h2><p><b>新手優先：</b>Stand up → バッタマン → 超えてアバンチュール → Drawイッパツ！ → Burn!</p><div class="row"><button class="primary" onclick="openExternal('${callVideo}','_blank')">🎬 Stand up｜官方 Call 練習</button><button class="primary" onclick="openExternal('${videoBatta}','_blank')">🎬 バッタマン｜Call 練習</button><button class="soft" onclick="openExternal('${yt('超特急 超えてアバンチュール コール 練習')}','_blank')">🎬 超えてアバンチュール</button><button class="soft" onclick="openExternal('${yt('超特急 Drawイッパツ コール 練習')}','_blank')">🎬 Drawイッパツ！</button><button class="soft" onclick="openExternal('${yt('超特急 Burn コール 練習')}','_blank')">🎬 Burn!</button></div></div>
  <div class="card"><h2>🛍️ 場周／周邊</h2><p>官方已公布東京巨蛋場周邊事前通販：<b>2026/10/5 18:00～10/11 23:59</b>，預計 11/21 左右寄達；會場販售時間等細節待官方後續公告。</p><ol><li>找「グッズ販売／グッズ売り場」標示。</li><li>確認你排的是「グッズ販売の列」，不是「入場列」。</li><li>先把想買清單打開，再排隊。</li></ol><button class="primary" onclick="openExternal('${goods}','_blank')">🛍️ 官方東京巨蛋周邊公告</button></div>
- <div class="card"><h2>🎫 入場：不知道排哪裡就直接問</h2><p>先找「入場列／入場口」，再用日文小抄直接問工作人員；如果對方回答太快，就切換到「🇯🇵 日文 → 🇹🇼 中文」即時翻譯協助理解。</p></div>`;
+ <div class="card"><h2>🎫 入場：不知道排哪裡就直接問</h2><p>先找「入場列／入場口」，再用日文小抄直接問工作人員；如果對方回答太快，就用「🇯🇵 日文小抄」確認關鍵句，再慢慢問一次。</p></div>`;
 }
 
 function passportSOS(){
@@ -2430,74 +2475,11 @@ function speakJapaneseV083(text){
 }
 function deletePhraseV083(i){if(i>=0&&i<data.phrases.length){data.phrases.splice(i,1);save();}}
 
-/* v0.9.85+ 即時雙向翻譯 */
-let liveTranslateDirV085='zh-ja';
-let liveTranslateBusyV085=false;
-function speakLiveV085(text,lang){
- try{if(!('speechSynthesis' in window))return alert('這支手機的瀏覽器不支援語音播放。');window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(text||''));u.lang=lang||'ja-JP';u.rate=0.9;u.pitch=1;window.speechSynthesis.speak(u);}catch(e){alert('目前無法播放語音。');}
-}
-function setLiveDirV085(dir){liveTranslateDirV085=dir;const input=document.getElementById('liveTranslateInputV085');if(input){input.value='';input.placeholder=dir==='zh-ja'?'按 🎤 說中文，或直接輸入中文…':'按 🎤 說日文，或直接輸入日文…';}const out=document.getElementById('liveTranslateOutputV085');if(out)out.innerHTML='<span class="muted">等待翻譯…</span>';const title=document.getElementById('liveTranslateTitleV085');if(title)title.textContent=dir==='zh-ja'?'🇹🇼 中文 → 🇯🇵 日文':'🇯🇵 日文 → 🇹🇼 中文';}
-async function liveTranslateSpeechV085(){
- const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
- const input=document.getElementById('liveTranslateInputV085');
- const status=document.getElementById('liveTranslateStatusV085');
- if(!SR){if(status)status.textContent='⚠️ 目前瀏覽器不支援網頁語音辨識；請改用 Chrome，或直接輸入文字。';return;}
- if(location.protocol!=='https:' && location.hostname!=='localhost' && location.hostname!=='127.0.0.1'){if(status)status.textContent='⚠️ 這個開啟方式不是安全連線，瀏覽器可能禁止麥克風語音辨識。請用 Chrome 開啟 App 的 HTTPS／PWA 版本，或直接輸入文字。';return;}
- if(!navigator.mediaDevices?.getUserMedia){if(status)status.textContent='⚠️ 瀏覽器沒有提供麥克風權限介面，請直接輸入文字或改用支援麥克風的 Chrome。';return;}
- try{
-  if(status)status.textContent='🎤 正在取得麥克風權限…';
-  const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-  stream.getTracks().forEach(t=>t.stop());
- }catch(e){
-  const msg=e?.name==='NotAllowedError'?'⚠️ 麥克風權限被拒絕。請到手機瀏覽器設定，允許這個 App／網站使用麥克風。':e?.name==='NotFoundError'?'⚠️ 找不到麥克風。':'⚠️ 無法使用麥克風，請確認瀏覽器的麥克風權限。';
-  if(status)status.textContent=msg;return;
- }
- const r=new SR();
- r.lang=liveTranslateDirV085==='zh-ja'?'zh-TW':'ja-JP';
- r.interimResults=false;r.continuous=false;
- r.onstart=()=>{if(status)status.textContent='🎤 正在聽，請說話…';};
- r.onresult=e=>{const text=e.results?.[0]?.[0]?.transcript||'';if(input)input.value=text;if(status)status.textContent='已聽到內容，正在翻譯…';translateLiveV085();};
- r.onerror=e=>{
-  const map={'not-allowed':'⚠️ 麥克風權限被拒絕，請允許麥克風後再試。','service-not-allowed':'⚠️ 此瀏覽器／目前 App 開啟方式禁止語音辨識，請用 Chrome 的 HTTPS／PWA 版本。','network':'⚠️ 語音辨識需要網路，目前連線失敗。','no-speech':'⚠️ 沒有聽到聲音。請靠近手機麥克風，再按一次 🎤。','audio-capture':'⚠️ 麥克風目前無法使用。','aborted':'⚠️ 語音辨識被中止，請再按一次。'};
-  if(status)status.textContent=map[e.error]||('⚠️ 語音辨識失敗：'+(e.error||'未知原因')+'。請再試一次或直接輸入文字。');
- };
- r.onend=()=>{if(status&&status.textContent==='🎤 正在聽，請說話…')status.textContent='等待你說話…';};
- try{r.start();}catch(e){if(status)status.textContent='⚠️ 語音辨識無法啟動，請再按一次 🎤。';}
-}
-async function translateLiveV085(){
- const input=document.getElementById('liveTranslateInputV085');const out=document.getElementById('liveTranslateOutputV085');const status=document.getElementById('liveTranslateStatusV085');
- const text=(input?.value||'').trim();if(!text){alert('請先說話或輸入文字。');return;}
- if(liveTranslateBusyV085)return;liveTranslateBusyV085=true;if(status)status.textContent='翻譯中…';
- const sl=liveTranslateDirV085==='zh-ja'?'zh-TW':'ja';const tl=liveTranslateDirV085==='zh-ja'?'ja':'zh-TW';
- try{
-  const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl='+encodeURIComponent(sl)+'&tl='+encodeURIComponent(tl)+'&dt=t&q='+encodeURIComponent(text);
-  const res=await fetch(url,{method:'GET'});if(!res.ok)throw new Error('translation request failed');
-  const raw=await res.json();const result=Array.isArray(raw?.[0])?raw[0].map(x=>x?.[0]||'').join(''):'';if(!result)throw new Error('empty translation');
-  if(out)out.innerHTML='<div class="live-result-main">'+esc(result)+'</div><button class="primary" onclick="speakLiveV085('+JSON.stringify(result).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026')+','+JSON.stringify(tl==='ja'?'ja-JP':'zh-TW')+')">🔊 播放翻譯</button>';
-  if(status)status.textContent='翻譯完成';
- }catch(e){
-  if(out)out.innerHTML='<div class="notice">⚠️ 線上翻譯暫時無法取得結果。你可以直接按「🌐 開啟 Google 翻譯」繼續使用。</div>';
-  if(status)status.textContent='翻譯服務暫時無法連線';
- }finally{liveTranslateBusyV085=false;}
-}
-function liveTranslate(){
- const input=document.getElementById('liveTranslateInputV085');if(input)input.focus();
-}
-
 function phrase(){
  const cats=phraseCats.map(c=>{const n=data.phrases.filter(x=>x.cat===c).length;return `<button class="phrase-cat-btn ${activePhraseCatV083===c?'active':''}" onclick="activePhraseCatV083='${esc(c).replace(/'/g,"\'")}';render()">${esc(c)}<small>${n} 句</small></button>`}).join('');
  const q=phraseSearchV083.trim().toLowerCase();
  const visible=data.phrases.filter(x=>x.cat===activePhraseCatV083&&(!q||[x.j,x.z,x.r].join(' ').toLowerCase().includes(q)));
- return `<div class="card"><h2>🇯🇵 日文小抄</h2><p class="muted">這一頁除了固定小抄，也可以直接做雙向對話翻譯。</p>
- <div class="live-translate-card"><h2>🎤 即時對話翻譯</h2><p class="muted">按一下說話：你說中文 → 日文；對方說日文 → 中文。第一次使用會請你允許麥克風，也可以直接輸入文字。</p>
- <div class="row"><button class="${liveTranslateDirV085==='zh-ja'?'primary':'soft'}" onclick="setLiveDirV085('zh-ja')">🇹🇼 我說中文 → 🇯🇵 日文</button><button class="${liveTranslateDirV085==='ja-zh'?'primary':'soft'}" onclick="setLiveDirV085('ja-zh')">🇯🇵 對方說日文 → 🇹🇼 中文</button></div>
- <h3 id="liveTranslateTitleV085">${liveTranslateDirV085==='zh-ja'?'🇹🇼 中文 → 🇯🇵 日文':'🇯🇵 日文 → 🇹🇼 中文'}</h3>
- <textarea id="liveTranslateInputV085" rows="3" placeholder="${liveTranslateDirV085==='zh-ja'?'按 🎤 說中文，或直接輸入中文…':'按 🎤 說日文，或直接輸入日文…'}"></textarea>
- <div class="row"><button class="primary" onclick="liveTranslateSpeechV085()">🎤 按住不用，按一下說話</button><button class="primary" onclick="translateLiveV085()">翻譯</button><button class="soft" onclick="document.getElementById('liveTranslateInputV085').value='';document.getElementById('liveTranslateOutputV085').innerHTML='<span class=\"muted\">等待翻譯…</span>'">清除</button></div>
- <div id="liveTranslateStatusV085" class="small">等待你說話…</div><div id="liveTranslateOutputV085" class="live-translate-output"><span class="muted">等待翻譯…</span></div>
- <button class="soft" onclick="openExternal('https://translate.google.com','_blank')">🌐 開啟 Google 翻譯</button>
- </div>
- <div class="phrase-search"><input value="${esc(phraseSearchV083)}" oninput="phraseSearchV083=this.value;render()" placeholder="🔎 搜尋：入住、免稅、計程車、東京巨蛋、過敏、護照…"></div><div class="phrase-cat-grid">${cats}</div></div>
+ return `<div class="card"><h2>🇯🇵 日文小抄</h2> <div class="phrase-search"><input value="${esc(phraseSearchV083)}" oninput="phraseSearchV083=this.value;render()" placeholder="🔎 搜尋：入住、免稅、計程車、東京巨蛋、過敏、護照…"></div><div class="phrase-cat-grid">${cats}</div></div>
  <div class="card"><h2>📋 ${esc(activePhraseCatV083)}${q?`｜搜尋「${esc(q)}」`:''}</h2>${visible.map(x=>{const realI=data.phrases.indexOf(x);return `<div class="item"><span class="badge">${esc(x.cat)}</span><div class="phrase-line"><h3 style="font-size:18px;margin:0;flex:1">${esc(x.j)}</h3><button class="primary phrase-speak" title="播放日文" onclick="speakJapaneseV083(${JSON.stringify(x.j).replace(/"/g,'&quot;')})">🔊</button></div><p>🇹🇼 ${esc(x.z)}</p><p>🔤 ${esc(x.r)}</p><button class="danger" onclick="deletePhraseV083(${realI})">刪除</button></div>`}).join('')||`<p class="muted">找不到符合內容的句子。</p>`}</div>
  <div class="card"><h2>＋新增日文小抄</h2><label>分類</label><select id="phc">${phraseCats.map(x=>`<option ${x===activePhraseCatV083?'selected':''}>${esc(x)}</option>`).join('')}</select><label>日文</label><input id="phj"><label>中文</label><input id="phz"><label>羅馬拼音／備註</label><input id="phr"><br><button class="primary" onclick="addPhraseV083()">＋保存</button></div>`;
 }
@@ -2545,6 +2527,17 @@ function exportProjectMaster(){
  let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='日本管家_專案主檔_v0.9.93.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 let tab="home";
+// v0.9.100：演唱會應援新增自訂歌單／應援功能。
+const GUIDE_IDS=['guide-cover','guide-plan','guide-ai','guide-sort','guide-hotel','guide-concert','guide-pilgrimage','guide-food','guide-shopping','guide-japanese','guide-tools','guide-notes','guide-transport','guide-weather','guide-backup','guide-flow','guide-japan'];
+let guideIndex=0;let guideScrollBound=false;
+function openUsageGuide(){const m=document.getElementById('usageGuideModal');if(m){m.classList.add('show');document.body.classList.add('usage-guide-open');const box=document.querySelector('.usage-guide-pages');if(box&&!guideScrollBound){box.addEventListener('scroll',syncGuideScroll,{passive:true});guideScrollBound=true;}guideGo('guide-cover',false);}}
+function closeUsageGuide(){const m=document.getElementById('usageGuideModal');if(m){m.classList.remove('show');document.body.classList.remove('usage-guide-open');}}
+function guideGo(id,smooth=true){const el=document.getElementById(id),box=document.querySelector('.usage-guide-pages');const i=GUIDE_IDS.indexOf(id);if(!el||!box)return;if(i>=0)guideIndex=i;box.scrollTo({top:Math.max(0,el.offsetTop-box.offsetTop-4),behavior:smooth?'smooth':'auto'});document.querySelectorAll('.usage-guide-toc button').forEach((b,n)=>b.classList.toggle('active',n===guideIndex));updateGuideNav();}
+function syncGuideScroll(){const box=document.querySelector('.usage-guide-pages');if(!box)return;let best=0;let bestTop=-Infinity;GUIDE_IDS.forEach((id,i)=>{const el=document.getElementById(id);if(!el)return;const top=el.offsetTop-box.offsetTop;if(top<=box.scrollTop+40&&top>bestTop){best=i;bestTop=top;}});if(best!==guideIndex){guideIndex=best;document.querySelectorAll('.usage-guide-toc button').forEach((b,n)=>b.classList.toggle('active',n===guideIndex));updateGuideNav();}}
+function guidePrev(){if(guideIndex>0)guideGo(GUIDE_IDS[guideIndex-1]);}
+function guideNext(){if(guideIndex<GUIDE_IDS.length-1)guideGo(GUIDE_IDS[guideIndex+1]);}
+function updateGuideNav(){const p=document.getElementById('guidePrevBtn'),n=document.getElementById('guideNextBtn');if(p){p.disabled=guideIndex<=0;p.textContent=guideIndex<=0?'最前面':'← 上一頁';}if(n){n.disabled=guideIndex>=GUIDE_IDS.length-1;n.textContent=guideIndex>=GUIDE_IDS.length-1?'最後一頁':'下一頁 →';}}
+
 function enforcePersonalBL(){
  data.pilgrimages=(data.pilgrimages||[]).filter(x=>!banned.has(String(x.work||'').trim()));
  data.pilgrimages.forEach(x=>{const c=canonicalBLWork(x.work);const base=c.replace(/\s+(?:S\d+|電影版|劇場版|電影|番外)$/,'');if(PERSONAL_BL_TITLES.has(base))x.work=c;});
@@ -3113,5 +3106,9 @@ function attachPlannerRecButtonsV072(){
 </script>
 
 
-</body>
+<div id="usageGuideModal" class="usage-guide-modal" onclick="if(event.target===this)closeUsageGuide()">
+<div class="usage-guide-shell">
+<div class="usage-guide-head"><h2>📖 日本管家使用說明</h2><button class="usage-guide-close" onclick="closeUsageGuide()">✕</button></div>
+<div class="usage-guide-body"><aside class="usage-guide-toc"><button onclick="guideGo('guide-cover')">🏠 使用說明首頁</button><button onclick="guideGo('guide-plan')">🗓️ 行程</button><button onclick="guideGo('guide-ai')">🤖 AI 排程</button><button onclick="guideGo('guide-sort')">✋ 自助排序</button><button onclick="guideGo('guide-hotel')">🏨 住宿</button><button onclick="guideGo('guide-concert')">🎤 超特急／東京巨蛋</button><button onclick="guideGo('guide-pilgrimage')">📍 聖地巡禮</button><button onclick="guideGo('guide-food')">🍜 餐廳</button><button onclick="guideGo('guide-shopping')">🛍️ 購物</button><button onclick="guideGo('guide-japanese')">🇯🇵 日文</button><button onclick="guideGo('guide-tools')">🧰 旅行工具</button><button onclick="guideGo('guide-notes')">📝 日本須知</button><button onclick="guideGo('guide-transport')">🚆 交通</button><button onclick="guideGo('guide-weather')">☔ 天氣</button><button onclick="guideGo('guide-backup')">💾 旅行資料備份</button><button onclick="guideGo('guide-flow')">🧭 最推薦的使用順序</button><button onclick="guideGo('guide-japan')">🚶 到日本後</button></aside><main class="usage-guide-pages"><section class="usage-guide-page" id="guide-cover"><h3>🇯🇵 日本管家 v0.9.99</h3><p>這是一份直接放在 App 裡的旅行使用說明，不需要下載檔案。</p><div class="guide-tip">先看左側目錄；點任何項目，就會直接跳到那一頁。</div></section><section class="usage-guide-page" id="guide-plan"><h3><span class="usage-guide-index">1</span>🗓️ 行程</h3><ul><li>景點、餐廳、購物、聖地、演唱會、住宿都能加入。</li><li>一般加入行程會先選 🤖 AI 排程 或 ✋ 自助排程。</li><li>AI 會綜合地區、交通、步行、停留時間、營業時間、住宿、固定活動與體力。</li></ul></section><section class="usage-guide-page" id="guide-ai"><h3><span class="usage-guide-index">2</span>🤖 AI 排程</h3><ul><li>就算行程一開始是空白，也能從抵達地點、住宿與固定活動開始規劃。</li><li>AI 會提出建議日期與理由。</li><li>你確認後才加入，不會偷偷移動或刪除既有行程。</li></ul></section><section class="usage-guide-page" id="guide-sort"><h3><span class="usage-guide-index">3</span>✋ 自助排序</h3><ul><li>⬆️ 上移／⬇️ 下移，每次移動一格。</li><li>景點、餐廳、演唱會、入住、回飯店、退房都能排序。</li><li>排序後當天會維持展開。</li></ul></section><section class="usage-guide-page" id="guide-hotel"><h3><span class="usage-guide-index">4</span>🏨 住宿</h3><ul><li>可新增、修改住宿。</li><li>入住／回飯店／退房是獨立行程節點。</li><li>住宿位置會影響 AI 排程。</li></ul></section><section class="usage-guide-page" id="guide-concert"><h3><span class="usage-guide-index">5</span>🎤 超特急／東京巨蛋</h3><ul><li>目前固定活動：2026/11/25、11/26。</li><li>AI 會把演唱會當重要錨點，避免演唱會前安排太遠或太累。</li></ul></section><section class="usage-guide-page" id="guide-pilgrimage"><h3><span class="usage-guide-index">6</span>📍 聖地巡禮</h3><ul><li>可查看附近聖地，也可依作品查詢。</li><li>同作品 S1/S2/S3/S4、電影版、番外合併成同一作品卡。</li><li>定位不能用時，可以手動選地區／景點。</li><li>核心理念：順路就去，不為一個聖地特地橫跨東京。</li></ul></section><section class="usage-guide-page" id="guide-food"><h3><span class="usage-guide-index">7</span>🍜 餐廳</h3><ul><li>探索裡查看餐廳資料。</li><li>餐廳可以加入行程，加入時選 AI 排程或自助排程。</li></ul></section><section class="usage-guide-page" id="guide-shopping"><h3><span class="usage-guide-index">8</span>🛍️ 購物</h3><ul><li>可記錄假面騎士變身器、扭蛋、零食、伴手禮、EBiDAN、超特急周邊等。</li><li>購物項目也可以加入行程。</li><li>保留你的購物整理連結。</li></ul></section><section class="usage-guide-page" id="guide-japanese"><h3><span class="usage-guide-index">9</span>🇯🇵 日文</h3><ul><li>旅行用日文小抄：車站、餐廳、購物、問路、住宿、緊急情況。</li><li>可新增自己的常用句子。</li><li>可使用日文朗讀。</li><li>⚠️ 對話翻譯已移除。</li></ul></section><section class="usage-guide-page" id="guide-tools"><h3><span class="usage-guide-index">10</span>🧰 旅行工具</h3><ul><li>🎤 演唱會應援</li><li>🆘 SOS 旅途中緊急處理</li><li>📞 緊急聯絡電話</li><li>💾 旅行資料備份</li><li>💰 旅費記帳</li><li>🧳 行前清單</li></ul></section><section class="usage-guide-page" id="guide-notes"><h3><span class="usage-guide-index">11</span>📝 日本須知</h3><ul><li>⛩️ 日本神社參拜</li><li>🛍️ 日本購物須知</li><li>🇯🇵 日本文化</li><li>📝 我的日本須知</li><li>可以新增、編輯、刪除自己的須知。</li></ul></section><section class="usage-guide-page" id="guide-transport"><h3><span class="usage-guide-index">12</span>🚆 交通</h3><ul><li>東京 Metro 路線圖、JR 東日本路線圖、自訂交通與查交通。</li><li>需要即時路線、班次、出口時，再開 Google Maps。</li><li>目標是讓你不熟東京電車也能照著走。</li></ul></section><section class="usage-guide-page" id="guide-weather"><h3><span class="usage-guide-index">13</span>☔ 天氣</h3><ul><li>首頁可查看東京天氣。</li><li>可切換東京、三麗鷗彩虹樂園、東京巨蛋、池袋、秋葉原、原宿、飯田橋、淺草。</li><li>出發前可依天氣調整戶外行程。</li></ul></section><section class="usage-guide-page" id="guide-backup"><h3><span class="usage-guide-index">14</span>💾 旅行資料備份</h3><ul><li>個人旅行資料與 App 程式分開保存。</li><li>可匯出旅行資料；換版本或需要恢復時可匯入。</li><li>建議重要修改後定期備份。</li></ul></section><section class="usage-guide-page" id="guide-flow"><h3><span class="usage-guide-index">15</span>🧭 最推薦的使用順序</h3><ul><li>① 填住宿</li><li>② 填超特急／東京巨蛋固定活動</li><li>③ 填抵達與回程機場</li><li>④ 把想去的景點／餐廳／購物／聖地先加入</li><li>⑤ 讓 AI 排程</li><li>⑥ 不滿意再手動調整</li></ul></section><section class="usage-guide-page" id="guide-japan"><h3><span class="usage-guide-index">16</span>🚶 到日本後</h3><ul><li>需要搭車 → 🚆 交通</li><li>不知道附近有什麼 → 📍 附近聖地</li><li>想買東西 → 🛍️ 購物清單</li><li>需要日文 → 🇯🇵 日文小抄</li><li>遇到問題 → 🆘 SOS／緊急電話</li></ul></section><div class="usage-guide-nav"><button id="guidePrevBtn" onclick="guidePrev()">最前面</button><button id="guideNextBtn" onclick="guideNext()">下一頁 →</button></div></main></div>
+</div></div></body>
 </html>
