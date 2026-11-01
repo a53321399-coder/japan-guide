@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="theme-color" content="#f58aa0">
-<title>日本管家 v0.9.100</title>
+<title>日本管家 v0.9.107</title>
 <style>
 *{box-sizing:border-box}
 :root{--ink:#4b3f46;--paper:#fffaf0;--paper2:#fffdf8;--pink:#ffb7c9;--blue:#a9d9ff;--yellow:#ffe58c;--green:#bfe7c4;--purple:#cbb9f4;--shadow:#d9c9b9}
@@ -256,7 +256,7 @@ body.usage-guide-open{overflow:hidden}
 @media(max-width:680px){.usage-guide-modal{padding:7px}.usage-guide-shell{height:94vh;border-radius:18px}.usage-guide-head{padding:10px 12px}.usage-guide-head h2{font-size:18px}.usage-guide-body{display:flex;flex-direction:column;min-height:0}.usage-guide-toc{width:100%;height:70px;flex:0 0 70px;border-right:0;border-bottom:1px solid #eadbd5;display:flex;overflow-x:auto;overflow-y:hidden;gap:5px;padding:7px;scrollbar-width:none}.usage-guide-toc::-webkit-scrollbar{display:none}.usage-guide-toc button{min-width:122px;width:auto;flex:0 0 122px;padding:6px 7px;margin:0;font-size:12px;line-height:1.2}.usage-guide-pages{height:auto;min-height:0;flex:1;padding:12px 12px 78px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}.usage-guide-page{padding:18px;margin-bottom:13px}.usage-guide-page h3{font-size:23px}.usage-guide-page p,.usage-guide-page li{font-size:18px}.usage-guide-nav{padding-top:7px}.usage-guide-nav button{font-size:14px;padding:8px 9px}}
 </style></head>
 <body>
-<header><h1>🇯🇵 日本管家</h1><small>v0.9.100｜日本旅行管家</small></header>
+<header><h1>🇯🇵 日本管家</h1><small>v0.9.107｜日本旅行管家</small></header>
 <main id="app"></main><div id="pilLightbox" class="pil-lightbox" onclick="if(event.target===this)closePilImage()"><div class="pil-lightbox-inner"><button class="pil-lightbox-close" onclick="closePilImage()">✕</button><div id="pilLightboxTitle" class="pil-lightbox-title"></div><img id="pilLightboxImg" alt="現場圖片"><div id="pilLightboxCaption" class="pil-lightbox-caption"></div><div class="pil-lightbox-actions"><button class="soft" onclick="closePilImage()">↩ 返回聖地列表</button><button class="soft" onclick="openExternal(document.getElementById('pilLightboxImg').src)">↗ 新分頁開啟</button></div></div></div>
 <div id="mapModal" class="map-modal" onclick="if(event.target===this)closeMapModal()"><div class="map-modal-panel"><div class="map-modal-head"><b id="mapModalTitle">🚆 交通路線圖</b><button class="soft" onclick="closeMapModal()">✕ 關閉</button></div><div id="mapModalBody" class="map-modal-body"></div></div></div>
 <nav>
@@ -564,6 +564,45 @@ function seedV05(){
 }
 
 seedV05();
+
+// v0.9.107：依使用者購票截圖補入去回程航班與航站資訊，供 AI 排程使用。
+function applyTokyoTripAnchorsV104(){
+  if(!data.settings) data.settings={};
+  // 固定旅行日期與成田方向；不臆測抵達／回程航班時間。
+  data.start='2026-11-22'; data.end='2026-11-28';
+  data.settings.arrivalAirport='成田機場';
+  data.settings.returnAirport='成田機場';
+  if(!data.settings.budgetTwd) data.settings.budgetTwd=30000;
+  if(!Array.isArray(data.hotels)) data.hotels=[];
+  const ensureHotel=(name,checkin,checkout,address,note,seed)=>{
+    const found=data.hotels.some(h=>String(h.name||'').toLowerCase().includes(name.toLowerCase()) && hotelDateV078(h.checkin)===checkin.slice(0,10));
+    if(!found) data.hotels.push({id:uid(),name,address,phone:'',checkin,checkout,booking:'',note,seed});
+  };
+  ensureHotel('KOKO Hotel 後樂園','2026-11-22 15:00後','2026-11-25 10:00前','KOKO Hotel 後樂園, Tokyo, Japan','已確認住宿｜11/22～11/25；確切地址與訂房資料可再補','user-v104-koko');
+  ensureHotel('the b suidobashi','2026-11-25 15:00後','2026-11-26 11:00前','1-25-27 Hongo, Bunkyo-ku, Tokyo 113-0033, Japan','已確認住宿｜11/25 一晚｜東京巨蛋演唱會期間','user-v104-theb');
+  ensureHotel('Hop Inn Tokyo Iidabashi','2026-11-26 15:00後','2026-11-27 11:00前','2-25 Shimomiyabicho, Shinjuku-ku, Tokyo 162-0822, Japan','已確認住宿｜11/26 一晚','user-v104-hopinn');
+  data.hotel=data.hotels.find(h=>/KOKO Hotel 後樂園/i.test(String(h.name||'')))||data.hotels[0]||data.hotel;
+  // 固定活動是排程錨點，不自動塞入行程、不移動或刪除使用者既有行程。
+  if(!data.concert) data.concert={dates:[]};
+  data.concert.date='2026-11-25'; data.concert.venue='東京巨蛋';
+  data.concert.dates=[
+    {date:'2026-11-25',open:data.concert.dates?.find(x=>x.date==='2026-11-25')?.open||'16:00',start:data.concert.dates?.find(x=>x.date==='2026-11-25')?.start||'18:00',end:data.concert.dates?.find(x=>x.date==='2026-11-25')?.end||'21:30（預計）'},
+    {date:'2026-11-26',open:data.concert.dates?.find(x=>x.date==='2026-11-26')?.open||'16:00',start:data.concert.dates?.find(x=>x.date==='2026-11-26')?.start||'18:00',end:data.concert.dates?.find(x=>x.date==='2026-11-26')?.end||'21:30（預計）'}
+  ];
+  data.settings.tripAnchorsV104={
+    arrivalDate:'2026-11-22',arrivalAirport:'成田機場',
+    hotels:[{date:'2026-11-22',nights:3,name:'KOKO Hotel 後樂園'},{date:'2026-11-25',nights:1,name:'the b suidobashi'},{date:'2026-11-26',nights:1,name:'Hop Inn Tokyo Iidabashi'}],
+    disney:{date:'2026-11-23',name:'東京迪士尼樂園',fullDay:true},
+    concerts:['2026-11-25','2026-11-26'],
+    finalNight:{date:'2026-11-27',status:'尚未訂房',preferredArea:'上野／日暮里',reason:'最後一天購物與用餐後，隔日可搭京成 Skyliner 前往成田機場；尚未預訂，不視為已訂住宿。'},
+    returnDate:'2026-11-28',returnAirport:'成田機場',flightTime:'19:45（成田 T1 起飛）',
+    flights:{airline:'酷航 Scoot',outbound:{flight:'TR866',date:'2026-11-22',from:'台北桃園國際機場 T1',fromCode:'TPE',departure:'06:50',to:'東京成田國際機場 T1',toCode:'NRT',arrival:'10:55',duration:'3小時05分',aircraft:'波音 787-9'},inbound:{flight:'TR875',date:'2026-11-28',from:'東京成田國際機場 T1',fromCode:'NRT',departure:'19:45',to:'台北桃園國際機場 T1',toCode:'TPE',arrival:'22:55',duration:'4小時10分',aircraft:'波音 787-9'}},
+    returnDayRule:'回程 19:45 成田 T1 起飛；11/28 可安排低負擔的半日活動，但需預留取行李、前往成田、報到與安檢時間。建議提早抵達機場，出發時間依當日交通與航空公司要求確認。'
+  };
+  data.flights=data.settings.tripAnchorsV104.flights;
+  try{localStorage.setItem(V04KEY,JSON.stringify(data));localStorage.setItem(PERSONAL_KEY,JSON.stringify(personalSnapshot()));}catch(e){}
+}
+applyTokyoTripAnchorsV104();
 
 // v0.9.78：使用者已確認 2026/11/23～11/25 新增住宿。
 // 與既有 11/25～11/27 兩間住宿並存，不覆蓋、不刪除。
@@ -1024,9 +1063,9 @@ function home(){
  <div class="card"><h2>📅 旅行日期</h2><div class="row">
  <div><label>出發日</label><input id="start" type="date" value="${esc(data.start)}"></div>
  <div><label>回程日</label><input id="end" type="date" value="${esc(data.end)}"></div></div>
- <label>抵達機場／地點</label><input id="arrivalAirport" value="${esc(data.settings.arrivalAirport||"")}" placeholder="例如：成田機場／羽田機場／東京站（尚未確定可留白）"><label>回程機場／地點</label><input id="returnAirport" value="${esc(data.settings.returnAirport||"")}" placeholder="例如：成田機場／羽田機場（尚未確定可留白）"><label>旅行預算（日圓，可選）</label><input id="budget" type="number" value="${esc(data.settings.budget||"")}" placeholder="例如 100000"><label>旅行預算（台幣）</label><input id="budgetTwd" type="number" value="${esc(data.settings.budgetTwd||30000)}"><p class="muted">※ 機票尚未確定時，機場可以先留白；之後再補，AI 排程會重新考量方向。</p>
+ <label>抵達機場／地點</label><input id="arrivalAirport" value="${esc(data.settings.arrivalAirport||"")}" placeholder="例如：成田機場／羽田機場／東京站（尚未確定可留白）"><label>回程機場／地點</label><input id="returnAirport" value="${esc(data.settings.returnAirport||"")}" placeholder="例如：成田機場／羽田機場（尚未確定可留白）"><label>旅行預算（日圓，可選）</label><input id="budget" type="number" value="${esc(data.settings.budget||"")}" placeholder="例如 100000"><label>旅行預算（台幣）</label><input id="budgetTwd" type="number" value="${esc(data.settings.budgetTwd||30000)}"><p class="muted">※ v0.9.107 已載入本次固定資料：11/22 成田抵達、11/23 東京迪士尼一整天、11/25–26 東京巨蛋演唱會；住宿為 KOKO Hotel 後樂園（11/22–25）、the b suidobashi（11/25）、Hop Inn Tokyo Iidabashi（11/26）。11/27 最後一晚尚未訂房，AI 優先考慮上野／日暮里；11/28 酷航 TR875 19:45 成田 T1 起飛、22:55 抵達桃園 T1；回程日保留前往機場與報到緩衝。</p>
  <br><br><button class="primary" onclick="setDates()">儲存旅行設定</button></div>
- <div class="card weather-card"><div class="weather-head"><div><h2>🌤️ <span id="weatherTitle">東京</span>天氣預報</h2><p class="muted" id="weatherStatus">正在取得免費天氣資料…</p></div><button class="soft weather-refresh" onclick="loadWeather()">↻ 更新</button></div><div class="row" style="margin:8px 0 10px"><select id="weatherPlace" onchange="changeWeatherPlace(this.value)" style="flex:1"><option value="tokyo">東京</option><option value="tama">多摩市／三麗鷗彩虹樂園</option><option value="tokyodome">東京巨蛋</option><option value="ikebukuro">池袋</option><option value="akihabara">秋葉原</option><option value="harajuku">原宿</option><option value="iidabashi">飯田橋</option><option value="asakusa">淺草</option></select></div><div id="weatherBox"><div class="weather-loading">☁️ 天氣資料載入中…</div></div><button class="soft" style="margin-top:10px;width:100%" onclick="openExternal('https://www.data.jma.go.jp/multi/yoho/index.html?forecast=&lang=zh_tw')">☔ 日本氣象廳官方預報</button></div>
+ <div class="card weather-card"><div class="weather-head"><div><h2>🌤️ <span id="weatherTitle">東京</span>天氣預報</h2><p class="muted" id="weatherStatus">正在取得免費天氣資料…</p></div><button class="soft weather-refresh" onclick="loadWeather()">↻ 更新</button></div><div class="row" style="margin:8px 0 10px"><select id="weatherPlace" onchange="changeWeatherPlace(this.value)" style="flex:1"><option value="tokyo">東京</option><option value="disney">舞濱／東京迪士尼樂園</option><option value="tokyodome">東京巨蛋</option><option value="ikebukuro">池袋</option><option value="akihabara">秋葉原</option><option value="harajuku">原宿</option><option value="iidabashi">飯田橋</option><option value="asakusa">淺草</option></select></div><div id="weatherBox"><div class="weather-loading">☁️ 天氣資料載入中…</div></div><button class="soft" style="margin-top:10px;width:100%" onclick="openExternal('https://www.data.jma.go.jp/multi/yoho/index.html?forecast=&lang=zh_tw')">☔ 日本氣象廳官方預報</button></div>
  <div class="card transport-map-card"><h2>🚆 東京交通地圖</h2><p class="muted">首頁只放入口，不直接佔版面；點一下才展開路線圖。</p><div class="transport-map-buttons"><button class="soft" onclick="showTokyoMetroMap()">🚇 東京 Metro 路線圖</button><button class="soft" onclick="showJRMap()">🚆 JR 東日本路線圖</button></div><p class="map-note">Metro 圖使用 Tokyo Metro 官方繁體中文路線圖；JR 圖連結 JR 東日本官方最新路線圖。</p></div>
  <div class="card nearby-card"><h2>📍 路過也能巡聖地</h2><p class="muted">不用特地跑。到東京任何地方，按一下就看附近有沒有可以順便去的聖地。</p><button class="primary" onclick="navTo('pilgrimage')">查看我附近的聖地</button></div>
  <div class="card"><h2>📍 今天／下一站</h2>
@@ -1041,7 +1080,7 @@ function weatherIcon(code){if(code===0)return "☀️";if([1,2].includes(code))r
 function weatherText(code){if(code===0)return "晴";if([1,2].includes(code))return "晴時多雲";if(code===3)return "多雲";if([45,48].includes(code))return "霧";if([51,53,55,56,57].includes(code))return "毛毛雨";if([61,63,65,66,67,80,81,82].includes(code))return "雨";if([71,73,75,77,85,86].includes(code))return "雪";if([95,96,99].includes(code))return "雷雨";return "天氣"}
 const weatherPlaces={
  tokyo:{name:"東京",lat:35.6895,lon:139.6917},
- tama:{name:"多摩市",lat:35.6244,lon:139.4467},
+ disney:{name:"舞濱／東京迪士尼樂園",lat:35.6329,lon:139.8804},
  tokyodome:{name:"東京巨蛋",lat:35.7056,lon:139.7519},
  ikebukuro:{name:"池袋",lat:35.7295,lon:139.7109},
  akihabara:{name:"秋葉原",lat:35.7023,lon:139.7745},
@@ -1074,7 +1113,7 @@ function setDates(){
 const planTypes=["景點","餐廳","購物","演唱會","聖地巡禮","住宿","住宿入住","回飯店","住宿退房","遊樂園","伴手禮","其他"];
 function plan(){
  let ds=days();
- return `<div class="card"><h2>＋新增行程</h2>
+ return `<div class="card" id="planAddForm"><div class="item-top"><h2 style="margin:0">＋新增行程</h2><button class="soft" onclick="document.getElementById('planAddForm')?.scrollIntoView({behavior:'smooth',block:'start'})">➕ 新增</button></div>
  <div class="row"><div><label>日期</label><select id="pdate">${(ds.length?ds:[""]).map(d=>`<option value="${d}">${d||"請先設定旅行日期"}</option>`).join("")}</select></div>
  <div><label>時間</label><input id="ptime" type="time"></div></div>
  <label>名稱</label><input id="pname" placeholder="例如：K-BOOKS 池袋偶像館">
@@ -1154,7 +1193,7 @@ function plannerAreaV071(v){
     ['中目黑','中目黑','中目黒'],['惠比壽','惠比壽','恵比寿'],
     ['代官山','代官山'],['神保町','神保町'],['水道橋','水道橋','東京巨蛋','後楽園'],
     ['飯田橋','飯田橋','神樂坂','神楽坂'],['台場','台場','お台場'],
-    ['押上','押上','晴空塔','東京スカイツリー'],['多摩','多摩','三麗鷗','サンリオピューロランド']
+    ['押上','押上','晴空塔','東京スカイツリー'],['舞濱','舞濱','舞浜','迪士尼','Disneyland','DisneySea','東京ディズニー']
   ];
   return groups.filter(g=>g.slice(1).some(k=>s.includes(k))).map(g=>g[0]);
 }
@@ -1319,7 +1358,7 @@ const tripCandidates=[
  {name:'明治神宮＋原宿',area:'原宿／代代木',tags:'⛩️ 神社｜🌳 綠地｜📸 拍照｜🛍️ 逛街',time:'半天',note:'把媽媽想要的神社與原宿逛街放在同一天，交通也比較單純。',source:'GO TOKYO',url:'https://www.gotokyo.org/en/see-and-do/attractions/'},
  {name:'東京鐵塔＋芝公園周邊',area:'東京鐵塔',tags:'📸 風景｜🗼 地標｜🌆 夜景',time:'半天',note:'作為漂亮風景日的候選；可安排下午到晚上，讓媽媽拍白天與夜景。',source:'GO TOKYO',url:'https://www.gotokyo.org/en/see-and-do/attractions/'},
  {name:'新宿御苑＋新宿逛街',area:'新宿',tags:'🌳 庭園｜📸 拍照｜🛍️ 購物｜☕ 休息',time:'半天～一天',note:'如果媽媽想拍自然風景，可以把庭園與新宿購物放在一起。',source:'GO TOKYO',url:'https://www.gotokyo.org/en/see-and-do/attractions/'},
- {name:'三麗鷗彩虹樂園',area:'多摩',tags:'🎀 必去｜🎡 遊樂園｜📸 拍照',time:'一天',note:'這個直接保留為獨立一天候選，不和東京市區硬塞在一起。',source:'Sanrio Puroland',url:'https://www.puroland.jp/'},
+ {name:'東京迪士尼樂園（Tokyo Disneyland）',area:'舞濱／東京迪士尼',tags:'🏰 本次旅行目標｜🎢 主題樂園｜🎆 遊行／表演',time:'一整天',note:'使用者已確認本次要去東京迪士尼樂園，不去三麗鷗彩虹樂園。AI 排程需將其視為高體力、整日型固定目標，優先安排完整一天；避免當天再塞其他主要景點，並避開 2026/11/25、11/26 東京巨蛋演唱會。入園日期、營業時間與票券需依官方公告確認。',source:'Tokyo Disney Resort',url:'https://www.tokyodisneyresort.jp/'},
  {name:'淺草→隅田川→台場水上巴士',area:'淺草→台場',tags:'🚤 交通也是景點｜📸 河景／海景｜🌉 彩虹大橋',time:'半天～一天',note:'如果當天體力可以，讓移動本身變成觀光；GO TOKYO也推薦從淺草搭水上巴士前往台場。',source:'GO TOKYO',url:'https://www.gotokyo.org/en/story/walks-and-tours/odaiba/index.html'},
  {name:'東京晴空塔＋東京Solamachi',area:'晴空塔／押上',tags:'🗼 風景｜📸 高空景色｜🛍️ 購物｜☕ 可休息',time:'半天～一天',note:'高空展望＋大型購物商場，可依體力只逛商場或加上展望台。',source:'GO TOKYO',url:'https://www.gotokyo.org/en/destinations/eastern-tokyo/skytree-and-around/index.html'},
  {name:'谷中＋根津：老東京散步',area:'谷中／根津',tags:'⛩️ 神社｜📸 老街風景｜🛍️ 商店街｜☕ 休息',time:'半天',note:'節奏較慢的下町區域，有根津神社、谷中銀座與老街小店，適合不想一直趕景點的一天。',source:'GO TOKYO',url:'https://www.gotokyo.org/en/destinations/northern-tokyo/yanaka-and-nezu/index.html'},
@@ -1454,6 +1493,7 @@ function transportPlaceKey(s){
  if(/台場|お台場|台场/.test(v)) return 'odaiba';
  if(/飯田橋|神樂坂|神乐坂/.test(v)) return 'iidabashi';
  if(/池袋/.test(v)) return 'ikebukuro';
+ if(/東京迪士尼|東京ディズニー|ディズニーランド|舞濱|舞浜|disneyland/i.test(v)) return 'disney';
  if(/三麗鷗|三丽鸥|puroland|多摩中心|多摩センター/.test(v)) return 'puroland';
  if(/御茶ノ水|御茶之水|お茶の水/.test(v)) return 'ochanomizu';
  if(/東京テレポート|東京電訊|東京電訊站/.test(v)) return 'odaiba';
@@ -1493,6 +1533,7 @@ const TRANSPORT_AREA_INFO={
  iidabashi:{area:'飯田橋／神樂坂',station:'飯田橋站',region:'中央東京',note:'飯田橋與神樂坂可集中安排。'},
  ochanomizu:{area:'御茶之水',station:'御茶之水站（JR／東京 Metro）',region:'中央東京',note:'御茶之水、神田明神與附近校園街區可集中安排。'},
  ikebukuro:{area:'池袋',station:'池袋站',region:'西東京',note:'池袋站周邊動漫、購物與 Sunshine City 可集中安排。'},
+ disney:{area:'舞濱／東京迪士尼樂園',station:'JR 舞濱站（Maihama）',region:'東京灣／千葉方向',note:'東京迪士尼樂園是整日型主題樂園，建議獨立安排一整天；實際交通、營業時間與入園規則出發前依官方資訊確認。'},
  puroland:{area:'多摩中心／三麗鷗彩虹樂園',station:'多摩中心站',region:'多摩',note:'距離東京市中心較遠，通常建議獨立安排半天至一天。'},
  nakameguro:{area:'中目黑',station:'中目黑站（Tokyo Metro 日比谷線）',region:'西東京',note:'目黑川與街區散步可集中安排。'},
  ebisu:{area:'惠比壽／代官山',station:'惠比壽站（JR／Tokyo Metro）',region:'西東京',note:'惠比壽、代官山與中目黑可依體力串接。'},
@@ -1856,11 +1897,22 @@ function spot(){
  let visible=arr.filter(x=>spotMatchesArea(x,spotFocusArea));
  return `<div class="card"><h2>🌸 景點</h2><p class="muted">景點資料與「行程候選」共用同一份資料。行程候選是「怎麼排一段行程」，景點是「這一區有哪些具體地點」，兩邊互相連結，避免重複。</p><h3>📍 依區域查看</h3><div class="trip-area-grid"><button class="trip-area-btn ${spotFocusArea==='全部'?'active':''}" onclick="spotFocusArea='全部';render()">🗺️ 全部<small>${arr.length} 個景點</small></button>${areas.map(a=>{let n=arr.filter(x=>spotMatchesArea(x,a)).length;return `<button class="trip-area-btn ${spotFocusArea===a?'active':''}" onclick="spotFocusArea='${a}';render()">📍 ${esc(a)}<small>${n} 個相關景點</small></button>`}).join('')}</div></div><div class="card"><div class="notice">🔗 目前顯示 ${visible.length} 個景點。從「行程候選」點進來時，會自動帶你看對應區域，不用重新找。</div></div>${visible.map(x=>placeCard(x)).join('')||`<div class="card"><p class="muted">這個區域目前還沒有獨立景點資料；可以先使用行程候選，之後再把查證好的具體景點加入這裡。</p></div>`}`;
 }
+function editPlace(id){
+ const x=data.places.find(p=>p.id===id); if(!x)return;
+ const vals=[...(x.vals||[])];
+ for(let i=0;i<vals.length;i++){const v=prompt(`✏️ 編輯資料：\n${i===0?'名稱／店家':`欄位 ${i+1}`}`,vals[i]||'');if(v===null)return;vals[i]=v.trim();}
+ const f1=prompt('修改第一項補充資訊',x.filter1||'');if(f1===null)return;
+ const f2=prompt('修改第二項補充資訊',x.filter2||'');if(f2===null)return;
+ const confirm=prompt('所在地確認：輸入 confirmed 或 pending',x.confirm||'confirmed');if(confirm===null)return;
+ x.vals=vals;x.filter1=f1.trim();x.filter2=f2.trim();x.confirm=/^pending$/i.test(confirm.trim())?'pending':'confirmed';save();
+}
+function deletePlace(id){if(!confirm('確定要刪除這筆資料嗎？'))return;data.places=data.places.filter(x=>x.id!==id);save();}
+
 function genericPlaces(title,type,fields,filter1,filter2){
  let arr=data.places.filter(x=>x.kind===type);
  return `<div class="card"><h2>${title}</h2><div class="notice">📌 東京資料規則：網路清單、截圖或他人分享的店家，尚未確認在東京時不要直接加入正式資料。</div>
  <div class="row"><button class="soft" onclick="openExternal('https://www.google.com/maps','_blank')">🗺️ 查東京地點</button></div></div>
- <div class="card"><h2>＋新增資料</h2>${fields.map((f,i)=>`<label>${f}</label><input id="f${i}" placeholder="${f}"></input>`).join("")}
+ <div class="card" id="placeAddForm"><div class="item-top"><h2 style="margin:0">＋新增資料</h2><button class="soft" onclick="document.getElementById('placeAddForm')?.scrollIntoView({behavior:'smooth',block:'start'})">➕ 新增</button></div>${fields.map((f,i)=>`<label>${f}</label><input id="f${i}" placeholder="${f}"></input>`).join("")}
  <label>${filter1}</label><input id="fA" placeholder="${filter1}">
  <label>${filter2}</label><input id="fB" placeholder="${filter2}">
  <label>所在地確認</label><select id="fConfirm"><option value="confirmed">✅ 已確認在東京</option><option value="pending">⚠️ 待確認</option></select>
@@ -1877,7 +1929,7 @@ function placeCard(x){
  let loc=x.vals[2]||x.vals[1]||"";
  return `<div class="item"><div class="item-top"><span class="badge">${x.confirm==="confirmed"?"🇯🇵 東京已確認":"⚠️ 待確認"}</span></div>
  <h3>${esc(name)}</h3><p>${x.vals.slice(1).filter(Boolean).map(esc).join("｜")}</p>${x.filter1?`<p>👩‍👧 ${esc(x.filter1)}</p>`:""}${x.filter2?`<p>${esc(x.filter2)}</p>`:""}
- <div class="row">${loc?`<button class="soft" onclick="mapsOpen('${esc(loc).replace(/'/g,"&#39;")}')">🗺️ 地圖</button>`:""}${x.sourceUrl?`<button class="soft" onclick="openExternal('${esc(x.sourceUrl).replace(/'/g,"&#39;")}','_blank')">🔗 資料</button>`:""}<button class="primary" onclick="openScheduleChoice({source:'place',id:'${x.id}'})">➕ 加入行程</button><button class="danger" onclick="delPlace('${x.id}')">刪除</button></div></div>`;
+ <div class="row">${loc?`<button class="soft" onclick="mapsOpen('${esc(loc).replace(/'/g,"&#39;")}')">🗺️ 地圖</button>`:""}${x.sourceUrl?`<button class="soft" onclick="openExternal('${esc(x.sourceUrl).replace(/'/g,"&#39;")}','_blank')">🔗 資料</button>`:""}<button class="primary" onclick="openScheduleChoice({source:'place',id:'${x.id}'})">➕ 加入行程</button><button class="soft" onclick="editPlace('${x.id}')">✏️ 編輯</button><button class="danger" onclick="deletePlace('${x.id}')">🗑️ 刪除</button></div></div>`;
 }
 function delPlace(id){data.places=data.places.filter(x=>x.id!==id);save()}
 
@@ -1909,9 +1961,10 @@ function openScheduleChoice(choice){
   scheduleModalV068(`<h2 style="margin-top:0">➕ 加入行程</h2><p><b>${scheduleEscapeV068(p.name)}</b></p><p style="color:#666">${scheduleEscapeV068(p.loc||'地點未填')}</p><div style="display:grid;gap:12px;margin-top:18px"><button class="primary" style="padding:15px" onclick="runAIScheduleV068()">🤖 AI 排程<br><small>依整趟旅行路線，幫我找適合的日期與位置</small></button><button class="soft" style="padding:15px" onclick="runManualScheduleV068()">✋ 自助排程<br><small>自己選擇要放哪一天</small></button><button class="soft" onclick="closeScheduleChoiceV068()">取消</button></div>`);
 }
 function ensureDatesV068(){const ds=days();return ds.length?ds:[];}
-function areaTokensV068(v){const s=String(v||'');const groups=[['淺草','淺草','浅草'],['上野','上野'],['秋葉原','秋葉原','外神田'],['原宿','原宿','表參道','表参道','神宮前'],['澀谷','澀谷','渋谷'],['新宿','新宿'],['池袋','池袋'],['銀座','銀座'],['築地','築地'],['東京站','東京站','東京駅','丸之內','丸の内'],['六本木','六本木'],['中目黑','中目黑','中目黒'],['惠比壽','惠比壽','恵比寿'],['代官山','代官山'],['神保町','神保町'],['水道橋','水道橋','東京巨蛋','後楽園'],['飯田橋','飯田橋','神樂坂','神楽坂'],['台場','台場','お台場'],['押上','押上','晴空塔','東京スカイツリー'],['多摩','多摩','三麗鷗','サンリオピューロランド']];return groups.filter(g=>g.slice(1).some(k=>s.includes(k))).map(g=>g[0]);}
+function areaTokensV068(v){const s=String(v||'');const groups=[['淺草','淺草','浅草'],['上野','上野'],['秋葉原','秋葉原','外神田'],['原宿','原宿','表參道','表参道','神宮前'],['澀谷','澀谷','渋谷'],['新宿','新宿'],['池袋','池袋'],['銀座','銀座'],['築地','築地'],['東京站','東京站','東京駅','丸之內','丸の内'],['六本木','六本木'],['中目黑','中目黑','中目黒'],['惠比壽','惠比壽','恵比寿'],['代官山','代官山'],['神保町','神保町'],['水道橋','水道橋','東京巨蛋','後楽園'],['飯田橋','飯田橋','神樂坂','神楽坂'],['台場','台場','お台場'],['押上','押上','晴空塔','東京スカイツリー'],['舞濱','舞濱','舞浜','迪士尼','Disneyland','DisneySea','東京ディズニー']];return groups.filter(g=>g.slice(1).some(k=>s.includes(k))).map(g=>g[0]);}
 function airportV068(){return data.settings?.arrivalAirport||data.settings?.airport||'';}
-function aiDayReasonV068(day,p){const a=areaTokensV068(p.loc+' '+p.name);const arr=data.plans.filter(x=>x.date===day);const same=arr.filter(x=>a.some(k=>areaTokensV068(x.loc+' '+x.name).includes(k)));if(same.length)return `同一天已有${same.map(x=>x.name).slice(0,2).join('、')}等${a[0]||'附近'}行程，能集中區域、減少折返。`;const idx=ensureDatesV068().indexOf(day);if(idx===0&&airportV068())return `第一天從${airportV068()}進東京，優先安排與抵達方向較順的區域。`;if(idx===ensureDatesV068().length-1&&(data.settings?.returnAirport))return `最後一天考慮往${data.settings.returnAirport}方向移動，保留回程彈性。`;return `綜合已排行程的區域、前後日路線、住宿位置、固定活動、抵達／回程方向與當日負擔後，這一天較適合，並盡量減少跨東京折返。`;}
+function aiDayReasonV068(day,p){const a=areaTokensV068(p.loc+' '+p.name);const arr=data.plans.filter(x=>x.date===day);const same=arr.filter(x=>a.some(k=>areaTokensV068(x.loc+' '+x.name).includes(k)));if(same.length)return `同一天已有${same.map(x=>x.name).slice(0,2).join('、')}等${a[0]||'附近'}行程，能集中區域、減少折返。`;const idx=ensureDatesV068().indexOf(day);if(idx===0&&airportV068())return `第一天從${airportV068()}進東京，優先安排與抵達方向較順的區域。`;if(day==='2026-11-27' && data.settings?.tripAnchorsV104)return `11/27 是最後一個完整活動日，最後一晚尚未訂房；優先考慮上野／日暮里，方便最後採買，隔天也較順路前往成田機場。`;
+ if(idx===ensureDatesV068().length-1&&(data.settings?.returnAirport))return `最後一天考慮往${data.settings.returnAirport}方向移動；回程班機時間尚未確認，不會自行假定。`;return `綜合已排行程的區域、前後日路線、住宿位置、固定活動、抵達／回程方向與當日負擔後，這一天較適合，並盡量減少跨東京折返。`;}
 function aiDistancePenaltyV088(from,to){
  const f=plannerAreaV071(from),t=plannerAreaV071(to);
  if(!f.length||!t.length)return 0;
@@ -1929,7 +1982,7 @@ function aiTravelMinutesV089(from,to){
  const f=plannerAreaV071(from),t=plannerAreaV071(to); if(!f.length||!t.length)return 60; if(f.some(x=>t.includes(x)))return 10; const penalty=aiDistancePenaltyV088(from,to); return penalty===-8?30:75;
 }
 function aiLoadPenaltyV089(arr){
- let n=arr.length*8; let heavy=arr.filter(x=>/遊樂園|迪士ニー|三麗鷗|演唱會/.test(String(x.type||'')+' '+String(x.name||''))).length; return n+heavy*25;
+ let n=arr.length*8; let heavy=arr.filter(x=>/遊樂園|迪士尼|Disneyland|DisneySea|三麗鷗|演唱會/.test(String(x.type||'')+' '+String(x.name||''))).length; return n+heavy*25;
 }
 function aiOpeningPenaltyV089(p){
  const txt=String(p.note||''); const m=txt.match(/(?:開|營業|営業時間)[^0-9]*(\d{1,2})[:：](\d{2})[^0-9]+(?:閉|結束|まで)[^0-9]*(\d{1,2})[:：](\d{2})/);
@@ -1953,6 +2006,10 @@ function aiScoreDayV068(day,p){
  const fixed=arr.filter(x=>x.fixedEvent||x.type==='演唱會');if(fixed.length&&p.type!=='演唱會')score-=45;
  const airport=airportV068();if(idx===0&&airport){const east=/成田|narita/i.test(airport),west=/羽田|haneda/i.test(airport),tok=tokens.join('');if(east&&/淺草|上野|押上|秋葉原/.test(tok))score+=45;if(west&&/品川|六本木|惠比壽|澀谷|銀座/.test(tok))score+=45;}
  const ra=data.settings?.returnAirport||'';if(idx===ds.length-1&&ra){const tok=tokens.join('');if(/成田|narita/i.test(ra)&&/淺草|上野|押上|秋葉原/.test(tok))score+=45;if(/羽田|haneda/i.test(ra)&&/品川|六本木|惠比壽|澀谷|銀座/.test(tok))score+=45;}
+ // v0.9.107：11/27 為最後完整活動日，優先考慮上野／日暮里；11/28 19:45 從成田 T1 起飛，當天僅推薦低負擔半日行程並保留機場交通緩衝。
+ if(day==='2026-11-27' && /上野|日暮里|淺草|秋葉原/.test(tokens.join(''))) score+=35;
+ if(day==='2026-11-28' && /成田|narita/i.test(ra) && /上野|日暮里|淺草|押上|秋葉原/.test(tokens.join(''))) score+=25;
+ if(day==='2026-11-28' && data.settings?.tripAnchorsV104?.flights?.inbound?.departure==='19:45') { if(p.type==='遊樂園'||/迪士尼|Disney|長時間|遠郊/.test(String(p.name||'')+' '+String(p.loc||''))) score-=70; if(/上野|日暮里|淺草|秋葉原|東京站/.test(tokens.join(''))) score+=20; }
  // 住宿方向：把當天住宿視為實際落腳點，減少跨區折返。
  const hotel=arr.find(x=>/住宿|飯店|酒店/.test(String(x.type||'')+' '+String(x.name||'')));
  if(hotel)score+=aiDistancePenaltyV088(hotel.loc,p.loc);
@@ -1960,6 +2017,12 @@ function aiScoreDayV068(day,p){
  if(idx>0){const prev=data.plans.filter(x=>x.date===ds[idx-1]);if(prev.length)score+=Math.max(...prev.map(x=>aiDistancePenaltyV088(x.loc||x.name,p.loc)))*0.8;}
  if(idx<ds.length-1){const next=data.plans.filter(x=>x.date===ds[idx+1]);if(next.length)score+=Math.max(...next.map(x=>aiDistancePenaltyV088(x.loc||x.name,p.loc)))*0.5;}
  if(p.type==='遊樂園')score-=arr.length*30;
+ // 本次旅行目標：東京迪士尼樂園需獨立安排整天，避免與東京巨蛋演唱會或其他高負擔活動同日。
+ if(/東京迪士尼|東京ディズニー|Disneyland/i.test(String(p.name||'')+' '+String(p.loc||''))){
+   score-=arr.length*80;
+   if(arr.some(x=>x.fixedEvent||x.type==='演唱會'))score-=1000;
+   if(arr.some(x=>/遊樂園|東京迪士尼|東京ディズニー|Disneyland/i.test(String(x.type||'')+' '+String(x.name||''))))score-=500;
+ }
  if(p.type==='聖地巡禮')score+=5; // 聖地仍可選 AI，但附近聖地功能不受影響。
  return score;
 }
@@ -1978,7 +2041,7 @@ function insertPlanSmartV068(item,date){
   data.plans.push(item);
 }
 function commitScheduleV068(date,reason){const ctx=__scheduleChoiceV068;if(!ctx)return;const p=ctx.p;const item={id:uid(),date,time:p.fixedTime||'',name:p.name,type:p.type,loc:p.loc,note:p.note,done:false,important:!!p.fixedEvent,fixedEvent:!!p.fixedEvent};insertPlanSmartV068(item,date);save();closeScheduleChoiceV068();alert(`🤖 AI 排程完成\n\n已加入：${date}\n\n${reason||'依目前整趟旅行路線判斷。'}`);}
-function runAIScheduleV068(){const ctx=__scheduleChoiceV068;if(!ctx)return;const p=ctx.p;const r=aiRecommendV068(p);if(!r){alert('請先設定旅行日期。');return;}scheduleModalV068(`<h2 style="margin-top:0">🤖 AI 排程建議</h2><h3>${scheduleEscapeV068(p.name)}</h3><div class="notice"><b>建議：${r.date}</b><br><br>${scheduleEscapeV068(r.reason)}<br><br>AI 會盡量把同區域集中，避開演唱會等固定活動，並避免把高體力行程塞得過滿。</div><div style="display:grid;gap:10px"><button class="primary" onclick="commitScheduleV068('${r.date}','${scheduleEscapeV068(r.reason)}')">✅ 確認加入 ${r.date}</button><button class="soft" onclick="runManualScheduleV068()">✋ 改用自助排程</button><button class="soft" onclick="closeScheduleChoiceV068()">取消</button></div>`);}
+function runAIScheduleV068(){const ctx=__scheduleChoiceV068;if(!ctx)return;const p=ctx.p;const r=aiRecommendV068(p);if(!r){alert('請先設定旅行日期。');return;}scheduleModalV068(`<h2 style="margin-top:0">🤖 AI 排程建議</h2><h3>${scheduleEscapeV068(p.name)}</h3><div class="notice"><b>建議：${r.date}</b><br><br>${scheduleEscapeV068(r.reason)}<br><br>AI 會盡量把同區域集中，避開演唱會等固定活動，並避免把高體力行程塞得過滿；東京迪士尼樂園會優先獨立安排一整天。</div><div style="display:grid;gap:10px"><button class="primary" onclick="commitScheduleV068('${r.date}','${scheduleEscapeV068(r.reason)}')">✅ 確認加入 ${r.date}</button><button class="soft" onclick="runManualScheduleV068()">✋ 改用自助排程</button><button class="soft" onclick="closeScheduleChoiceV068()">取消</button></div>`);}
 function runManualScheduleV068(){const ctx=__scheduleChoiceV068;if(!ctx)return;const ds=ensureDatesV068();if(!ds.length){alert('請先設定旅行日期。');return;}scheduleModalV068(`<h2 style="margin-top:0">✋ 自助排程</h2><p>請選擇「${scheduleEscapeV068(ctx.p.name)}」要加入哪一天。</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${ds.map(d=>`<button class="soft" onclick="commitScheduleV068('${d}','你選擇的日期。')">${d}</button>`).join('')}</div><br><button class="soft" onclick="closeScheduleChoiceV068()">取消</button>`);}
 function addPlaceToPlan(id){
  const x=data.places.find(p=>p.id===id);if(!x)return;
@@ -1987,14 +2050,14 @@ function addPlaceToPlan(id){
 
 function hotel(){
  let hs=(data.hotels&&data.hotels.length)?data.hotels:([data.hotel].filter(x=>x&&x.name));
- return `<div class="card"><h2>🏨 住宿手帳</h2><p class="notice">🧳 目前已登錄 ${hs.length} 段住宿；你可以逐筆修改或新增。</p></div>
+ return `<div class="card"><div class="item-top"><h2 style="margin:0">🏨 住宿手帳</h2><button class="soft" onclick="document.getElementById('hotelAddForm')?.scrollIntoView({behavior:'smooth',block:'start'})">➕ 新增</button></div><p class="notice">🧳 目前已登錄 ${hs.length} 段住宿；你可以逐筆修改或新增。</p></div>
  ${hs.map((h,i)=>`<div class="card"><span class="badge">第 ${i+1} 晚</span><h2>${esc(h.name)}</h2><p>📍 ${esc(h.address||'地址未填')}</p><p>🕒 入住：${esc(h.checkin||'未填')}<br>🚪 退房：${esc(h.checkout||'未填')}</p>${h.note?`<p>📝 ${esc(h.note)}</p>`:''}<div class="row">
  <button class="soft" onclick="mapsOpen('${esc(h.address||h.name).replace(/'/g,'&#39;')}')">🗺️ 導航</button>
  <button class="primary" onclick="addHotelEventToPlan(${i},'住宿入住')">🏨 ＋加入入住</button>
  <button class="primary" onclick="addHotelEventToPlan(${i},'回飯店')">🏨 ＋加入回飯店</button>
- <button class="primary" onclick="addHotelEventToPlan(${i},'住宿退房')">🚪 ＋加入退房</button><button class="soft" onclick="editHotel(${i})">✏️ 修改住宿</button>
+ <button class="primary" onclick="addHotelEventToPlan(${i},'住宿退房')">🚪 ＋加入退房</button><button class="soft" onclick="editHotel(${i})">✏️ 編輯</button><button class="danger" onclick="deleteHotel(${i})">🗑️ 刪除</button>
 </div></div>`).join('')}
- <div class="card"><h2>＋新增／修改住宿</h2>
+ <div class="card" id="hotelAddForm"><h2>＋新增住宿</h2>
  <div class="row"><div><label>飯店名稱</label><input id="hn" value=""></div><div><label>電話</label><input id="hp" value=""></div></div>
  <label>地址</label><input id="ha" value="">
  <div class="row"><div><label>Check-in</label><input id="hi" value=""></div><div><label>Check-out</label><input id="ho" value=""></div></div>
@@ -2016,6 +2079,11 @@ function saveHotel(){
  const h={id:uid(),name,address:(document.getElementById('ha')?.value||'').trim(),phone:(document.getElementById('hp')?.value||'').trim(),checkin:(document.getElementById('hi')?.value||'').trim(),checkout:(document.getElementById('ho')?.value||'').trim(),booking:(document.getElementById('hb')?.value||'').trim(),note:(document.getElementById('hnote')?.value||'').trim(),seed:'user'};
  data.hotels.push(h); ensureHotelPlanNodes(); save(); alert('住宿已新增，入住／回飯店／退房節點也已建立，可到行程頁自由排序。');
 }
+function deleteHotel(i){
+ const h=data.hotels?.[i];if(!h)return;if(!confirm(`確定要刪除住宿「${h.name||'未命名住宿'}」嗎？\n相關入住／回飯店／退房行程節點也會一起移除。`))return;
+ const id=h.id;data.hotels.splice(i,1);if(id)data.plans=(data.plans||[]).filter(p=>p.hotelId!==id);ensureHotelPlanNodes();save();
+}
+
 function addHotelEventToPlan(i,eventType){
   const h=(data.hotels||[])[i];
   if(!h)return;
@@ -2076,6 +2144,18 @@ function addHotelToPlan(i){
   data.plans.push({id:uid(),orderIndex:Date.now()+Math.random(),date:d,time,name:h.name,type:'住宿',loc:h.address,note:`${event}｜入住 ${h.checkin||''}｜退房 ${h.checkout||''}`,done:false,important:false,hotelEvent:event});
   save();
 }
+function editShoppingItem(i){
+ const x=data.shopping?.[i]; if(!x)return;
+ const shop=prompt('店家／地點',x.shop||'');if(shop===null)return;
+ const cat=prompt('類別',x.cat||'');if(cat===null)return;
+ const loc=prompt('地點',x.loc||'');if(loc===null)return;
+ const want=prompt('想買什麼',x.want||'');if(want===null)return;
+ const budget=prompt('預算（日圓）',x.budget??0);if(budget===null)return;
+ const note=prompt('備註',x.note||'');if(note===null)return;
+ Object.assign(x,{shop:shop.trim(),cat:cat.trim(),loc:loc.trim(),want:want.trim(),budget:Number(budget)||0,note:note.trim()});save();
+}
+function deleteShoppingItem(i){if(!data.shopping?.[i])return;if(!confirm('確定要刪除這筆購物目標嗎？'))return;data.shopping.splice(i,1);save();}
+
 function addShopping(){data.shopping.push({shop:document.getElementById("shop").value.trim()||"未命名店家",cat:document.getElementById("scat").value,loc:document.getElementById("sloc").value.trim(),want:document.getElementById("swant").value.trim(),budget:Number(document.getElementById("sbudget").value||0),note:document.getElementById("snote").value.trim(),tripCandidateIndex:document.getElementById("strip").value===''?null:Number(document.getElementById("strip").value),bought:false});save()}
 function ensureShoppingIdsV071(){
   let changed=false;
@@ -2095,16 +2175,23 @@ function shopping(){
  const arr=Array.isArray(data.shopping)?data.shopping:[];
  return `<div class="card"><button class="soft back" onclick="goBack('explore')">← 返回探索</button><div class="doodle">🛍️ 🎁 🧸 ✨</div><h2>🛍️ 購物清單</h2><p class="muted">把想買的東西先記下來；加入行程時會統一讓你選「🤖 AI 排程／✋ 自助排程」。</p><button class="primary" style="width:100%;margin-top:10px" onclick="openExternal('https://alinchuang.my.canva.site/')">🔗 開啟我的東京購物整理</button></div>
 
- <div class="card"><h2>＋新增購物目標</h2><label>店家／地點</label><input id="shop" placeholder="例如：TRIO 原宿2号店"><div class="row"><div><label>類別</label><input id="scat" placeholder="EBiDAN／假面騎士／扭蛋"></div><div><label>地點</label><input id="sloc" placeholder="原宿／澀谷／上野"></div></div><label>想買什麼</label><input id="swant" placeholder="超特急周邊、假面騎士變身器…"><label>預算（日圓）</label><input id="sbudget" type="number"><label>備註</label><textarea id="snote" placeholder="營業時間、想買款式、注意事項…"></textarea><button class="primary" onclick="addShopping()">＋保存購物目標</button></div>
- <div class="card"><h2>📋 我的購物清單（${arr.length}）</h2>${arr.map((x,i)=>`<div class="item"><div class="item-top"><span class="badge">${esc(x.cat||'購物')}</span>${x.bought?'✅ 已買':'🛒 想買'}</div><h3>${esc(x.shop||x.name||'未命名店家')}</h3>${x.want?`<p>🛍️ 想買：${esc(x.want)}</p>`:''}<p>📍 ${esc(x.loc||'地點未填')}</p>${x.budget?`<p>💴 預算：¥${Number(x.budget).toLocaleString()}</p>`:''}${x.note?`<p>📝 ${esc(x.note)}</p>`:''}<div class="row"><button class="primary" onclick="addShoppingToPlan(${i})">➕ 加入行程</button><button class="soft" onclick="data.shopping[${i}].bought=!data.shopping[${i}].bought;save()">${x.bought?'↩️ 改為想買':'✅ 標記已買'}</button><button class="soft" onclick="mapsOpen('${esc(x.loc||x.shop||'').replace(/'/g,"&#39;")}')">🗺️ 地圖</button><button class="danger" onclick="data.shopping.splice(${i},1);save()">刪除</button></div></div>`).join('')||`<p class="muted">還沒有購物目標。</p>`}</div>`;
+ <div class="card" id="shoppingAddForm"><div class="item-top"><h2 style="margin:0">＋新增購物目標</h2><button class="soft" onclick="document.getElementById('shoppingAddForm')?.scrollIntoView({behavior:'smooth',block:'start'})">➕ 新增</button></div><label>店家／地點</label><input id="shop" placeholder="例如：TRIO 原宿2号店"><div class="row"><div><label>類別</label><input id="scat" placeholder="EBiDAN／假面騎士／扭蛋"></div><div><label>地點</label><input id="sloc" placeholder="原宿／澀谷／上野"></div></div><label>想買什麼</label><input id="swant" placeholder="超特急周邊、假面騎士變身器…"><label>預算（日圓）</label><input id="sbudget" type="number"><label>備註</label><textarea id="snote" placeholder="營業時間、想買款式、注意事項…"></textarea><button class="primary" onclick="addShopping()">＋保存購物目標</button></div>
+ <div class="card"><h2>📋 我的購物清單（${arr.length}）</h2>${arr.map((x,i)=>`<div class="item"><div class="item-top"><span class="badge">${esc(x.cat||'購物')}</span>${x.bought?'✅ 已買':'🛒 想買'}</div><h3>${esc(x.shop||x.name||'未命名店家')}</h3>${x.want?`<p>🛍️ 想買：${esc(x.want)}</p>`:''}<p>📍 ${esc(x.loc||'地點未填')}</p>${x.budget?`<p>💴 預算：¥${Number(x.budget).toLocaleString()}</p>`:''}${x.note?`<p>📝 ${esc(x.note)}</p>`:''}<div class="row"><button class="primary" onclick="addShoppingToPlan(${i})">➕ 加入行程</button><button class="soft" onclick="data.shopping[${i}].bought=!data.shopping[${i}].bought;save()">${x.bought?'↩️ 改為想買':'✅ 標記已買'}</button><button class="soft" onclick="mapsOpen('${esc(x.loc||x.shop||'').replace(/'/g,"&#39;")}')">🗺️ 地圖</button><button class="soft" onclick="editShoppingItem(${i})">✏️ 編輯</button><button class="danger" onclick="deleteShoppingItem(${i})">🗑️ 刪除</button></div></div>`).join('')||`<p class="muted">還沒有購物目標。</p>`}</div>`;
 }
 
 function souvenir(){
  let arr=data.souvenirs;
- return `<div class="card"><h2>🎁 伴手禮</h2><div class="row"><div><label>送誰</label><select id="to">${["媽媽","家人","朋友","自己","其他"].map(x=>`<option>${x}</option>`).join("")}</select></div><div><label>預算（日圓）</label><input id="sb" type="number"></div></div>
+ return `<div class="card" id="souvenirAddForm"><div class="item-top"><h2 style="margin:0">🎁 伴手禮</h2><button class="soft" onclick="document.getElementById('souvenirAddForm')?.scrollIntoView({behavior:'smooth',block:'start'})">➕ 新增</button></div><div class="row"><div><label>送誰</label><select id="to">${["媽媽","家人","朋友","自己","其他"].map(x=>`<option>${x}</option>`).join("")}</select></div><div><label>預算（日圓）</label><input id="sb" type="number"></div></div>
  <label>要買什麼</label><input id="sg" placeholder="東京限定甜點"><label>哪裡買</label><input id="where" placeholder="銀座／東京車站…"><br><br><button class="primary" onclick="addSouvenir()">＋加入</button></div>
- <div class="card"><h2>📋 清單</h2>${arr.map((x,i)=>`<div class="check"><input type="checkbox" ${x.done?"checked":""} onchange="data.souvenirs[${i}].done=this.checked;save()"><div class="${x.done?"done":""}"><b>${esc(x.to)}｜${esc(x.good)}</b><div class="small">預算 ¥${Number(x.budget||0).toLocaleString()}｜${esc(x.where||"地點未定")}</div></div><button class="danger" onclick="data.souvenirs.splice(${i},1);save()">刪</button></div>`).join("")||`<p class="muted">還沒有伴手禮。</p>`}</div>`;
+ <div class="card"><h2>📋 清單</h2>${arr.map((x,i)=>`<div class="check"><input type="checkbox" ${x.done?"checked":""} onchange="data.souvenirs[${i}].done=this.checked;save()"><div class="${x.done?"done":""}"><b>${esc(x.to)}｜${esc(x.good)}</b><div class="small">預算 ¥${Number(x.budget||0).toLocaleString()}｜${esc(x.where||"地點未定")}</div></div><button class="soft" onclick="editSouvenir(${i})">✏️ 編輯</button><button class="danger" onclick="deleteSouvenir(${i})">🗑️ 刪除</button></div>`).join("")||`<p class="muted">還沒有伴手禮。</p>`}</div>`;
 }
+function editSouvenir(i){
+ const x=data.souvenirs?.[i];if(!x)return;
+ const to=prompt('送誰',x.to||'');if(to===null)return;const good=prompt('要買什麼',x.good||'');if(good===null)return;const where=prompt('哪裡買',x.where||'');if(where===null)return;const budget=prompt('預算（日圓）',x.budget??0);if(budget===null)return;
+ Object.assign(x,{to:to.trim(),good:good.trim(),where:where.trim(),budget:Number(budget)||0});save();
+}
+function deleteSouvenir(i){if(!data.souvenirs?.[i])return;if(!confirm('確定要刪除這筆伴手禮嗎？'))return;data.souvenirs.splice(i,1);save();}
+
 function addSouvenir(){data.souvenirs.push({to:document.getElementById("to").value,good:document.getElementById("sg").value.trim(),where:document.getElementById("where").value.trim(),budget:Number(document.getElementById("sb").value||0),done:false});save()}
 
 let pilEditIndex=-1;
@@ -2407,10 +2494,16 @@ function emergency(){
 
 function expense(){
  let total=data.expenses.reduce((s,x)=>s+Number(x.yen||0),0);
- return `<div class="card"><h2>💰 花費記帳</h2><div class="row"><input id="ed" type="date" value="${today()}"><input id="en" placeholder="用途"><input id="ey" type="number" placeholder="日圓 ¥"></div>
+ return `<div class="card" id="expenseAddForm"><div class="item-top"><h2 style="margin:0">💰 花費記帳</h2><button class="soft" onclick="document.getElementById('expenseAddForm')?.scrollIntoView({behavior:'smooth',block:'start'})">➕ 新增</button></div><div class="row"><input id="ed" type="date" value="${today()}"><input id="en" placeholder="用途"><input id="ey" type="number" placeholder="日圓 ¥"></div>
  <label>類別</label><select id="ec">${["餐飲","交通","購物","住宿","門票","演唱會","其他"].map(x=>`<option>${x}</option>`).join("")}</select><br><br><button class="primary" onclick="addExp()">＋記帳</button>
- <p><b>總花費：¥${total.toLocaleString()}</b></p>${data.expenses.map((x,i)=>`<div class="item"><b>${esc(x.name)}</b>　¥${Number(x.yen).toLocaleString()}<p>${esc(x.date)}｜${esc(x.cat||"其他")}</p><button class="danger" onclick="data.expenses.splice(${i},1);save()">刪除</button></div>`).join("")||`<p class="muted">還沒有花費。</p>`}</div>`;
+ <p><b>總花費：¥${total.toLocaleString()}</b></p>${data.expenses.map((x,i)=>`<div class="item"><b>${esc(x.name)}</b>　¥${Number(x.yen).toLocaleString()}<p>${esc(x.date)}｜${esc(x.cat||"其他")}</p><button class="soft" onclick="editExp(${i})">✏️ 編輯</button><button class="danger" onclick="deleteExp(${i})">🗑️ 刪除</button></div>`).join("")||`<p class="muted">還沒有花費。</p>`}</div>`;
 }
+function editExp(i){
+ const x=data.expenses?.[i];if(!x)return;const date=prompt('日期（YYYY-MM-DD）',x.date||'');if(date===null)return;const name=prompt('用途',x.name||'');if(name===null)return;const yen=prompt('日圓金額',x.yen??0);if(yen===null)return;const cat=prompt('類別',x.cat||'其他');if(cat===null)return;
+ Object.assign(x,{date:date.trim(),name:name.trim(),yen:Number(yen)||0,cat:cat.trim()||'其他'});save();
+}
+function deleteExp(i){if(!data.expenses?.[i])return;if(!confirm('確定要刪除這筆花費嗎？'))return;data.expenses.splice(i,1);save();}
+
 function addExp(){let n=document.getElementById("en").value.trim(),y=document.getElementById("ey").value;if(!n||!y)return alert("請填用途與金額");data.expenses.push({date:document.getElementById("ed").value,name:n,yen:Number(y),cat:document.getElementById("ec").value});save()}
 
 const phraseCats=["餐廳／海鮮過敏","住宿","演唱會／入場","演唱會／場周","交通","購物","計程車","基本用語","緊急狀況"];
@@ -2473,6 +2566,10 @@ let phraseSearchV083='';
 function speakJapaneseV083(text){
  try{if(!('speechSynthesis' in window))return alert('這支手機的瀏覽器不支援日文語音播放。');window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(text||''));u.lang='ja-JP';u.rate=.88;u.pitch=1;window.speechSynthesis.speak(u);}catch(e){alert('目前無法播放日文語音，請確認瀏覽器允許語音播放。');}
 }
+function editPhraseV083(i){
+ const x=data.phrases?.[i];if(!x)return;const cat=prompt('分類',x.cat||phraseCats[0]);if(cat===null)return;const j=prompt('日文',x.j||'');if(j===null)return;if(!j.trim())return alert('日文不能空白');const z=prompt('中文',x.z||'');if(z===null)return;const r=prompt('羅馬拼音／備註',x.r||'');if(r===null)return;Object.assign(x,{cat:cat.trim()||phraseCats[0],j:j.trim(),z:z.trim(),r:r.trim()});save();
+}
+
 function deletePhraseV083(i){if(i>=0&&i<data.phrases.length){data.phrases.splice(i,1);save();}}
 
 function phrase(){
@@ -2480,8 +2577,8 @@ function phrase(){
  const q=phraseSearchV083.trim().toLowerCase();
  const visible=data.phrases.filter(x=>x.cat===activePhraseCatV083&&(!q||[x.j,x.z,x.r].join(' ').toLowerCase().includes(q)));
  return `<div class="card"><h2>🇯🇵 日文小抄</h2> <div class="phrase-search"><input value="${esc(phraseSearchV083)}" oninput="phraseSearchV083=this.value;render()" placeholder="🔎 搜尋：入住、免稅、計程車、東京巨蛋、過敏、護照…"></div><div class="phrase-cat-grid">${cats}</div></div>
- <div class="card"><h2>📋 ${esc(activePhraseCatV083)}${q?`｜搜尋「${esc(q)}」`:''}</h2>${visible.map(x=>{const realI=data.phrases.indexOf(x);return `<div class="item"><span class="badge">${esc(x.cat)}</span><div class="phrase-line"><h3 style="font-size:18px;margin:0;flex:1">${esc(x.j)}</h3><button class="primary phrase-speak" title="播放日文" onclick="speakJapaneseV083(${JSON.stringify(x.j).replace(/"/g,'&quot;')})">🔊</button></div><p>🇹🇼 ${esc(x.z)}</p><p>🔤 ${esc(x.r)}</p><button class="danger" onclick="deletePhraseV083(${realI})">刪除</button></div>`}).join('')||`<p class="muted">找不到符合內容的句子。</p>`}</div>
- <div class="card"><h2>＋新增日文小抄</h2><label>分類</label><select id="phc">${phraseCats.map(x=>`<option ${x===activePhraseCatV083?'selected':''}>${esc(x)}</option>`).join('')}</select><label>日文</label><input id="phj"><label>中文</label><input id="phz"><label>羅馬拼音／備註</label><input id="phr"><br><button class="primary" onclick="addPhraseV083()">＋保存</button></div>`;
+ <div class="card"><h2>📋 ${esc(activePhraseCatV083)}${q?`｜搜尋「${esc(q)}」`:''}</h2>${visible.map(x=>{const realI=data.phrases.indexOf(x);return `<div class="item"><span class="badge">${esc(x.cat)}</span><div class="phrase-line"><h3 style="font-size:18px;margin:0;flex:1">${esc(x.j)}</h3><button class="primary phrase-speak" title="播放日文" onclick="speakJapaneseV083(${JSON.stringify(x.j).replace(/"/g,'&quot;')})">🔊</button></div><p>🇹🇼 ${esc(x.z)}</p><p>🔤 ${esc(x.r)}</p><button class="soft" onclick="editPhraseV083(${realI})">✏️ 編輯</button><button class="danger" onclick="deletePhraseV083(${realI})">🗑️ 刪除</button></div>`}).join('')||`<p class="muted">找不到符合內容的句子。</p>`}</div>
+ <div class="card" id="phraseAddForm"><div class="item-top"><h2 style="margin:0">＋新增日文小抄</h2><button class="soft" onclick="document.getElementById('phraseAddForm')?.scrollIntoView({behavior:'smooth',block:'start'})">➕ 新增</button></div><label>分類</label><select id="phc">${phraseCats.map(x=>`<option ${x===activePhraseCatV083?'selected':''}>${esc(x)}</option>`).join('')}</select><label>日文</label><input id="phj"><label>中文</label><input id="phz"><label>羅馬拼音／備註</label><input id="phr"><br><button class="primary" onclick="addPhraseV083()">＋保存</button></div>`;
 }
 function addPhraseV083(){const j=document.getElementById('phj').value.trim();if(!j)return alert('請先填日文');data.phrases.push({cat:document.getElementById('phc').value,j,z:document.getElementById('phz').value.trim(),r:document.getElementById('phr').value.trim(),a:''});save();}
 
@@ -2492,9 +2589,14 @@ function check(){
    ["護照","證件"],["機票／登機資訊","證件"],["演唱會票","演唱會"],["入場資訊","演唱會"],["飯店確認","住宿"],["eSIM","網路"],["Suica","交通"],["充電器","電子用品"],["行動電源","電子用品"]
   ].map(x=>({id:uid(),text:x[0],cat:x[1],done:false}));
  }
- return `<div class="card"><h2>🧳 行前清單</h2><div class="row"><input id="newcheck" placeholder="新增項目"><button class="primary" onclick="addCheck()">＋新增</button></div></div>
- <div class="card">${data.checklists.map((x,i)=>`<div class="check"><input type="checkbox" ${x.done?"checked":""} onchange="data.checklists[${i}].done=this.checked;save()"><div class="${x.done?"done":""}"><b>${esc(x.text)}</b><div class="small">${esc(x.cat)}</div></div><button class="danger" onclick="data.checklists.splice(${i},1);save()">刪</button></div>`).join("")}</div>`;
+ return `<div class="card" id="checkAddForm"><div class="item-top"><h2 style="margin:0">🧳 行前清單</h2><button class="soft" onclick="document.getElementById('checkAddForm')?.scrollIntoView({behavior:'smooth',block:'start'})">➕ 新增</button></div><div class="row"><input id="newcheck" placeholder="新增項目"><button class="primary" onclick="addCheck()">＋新增</button></div></div>
+ <div class="card">${data.checklists.map((x,i)=>`<div class="check"><input type="checkbox" ${x.done?"checked":""} onchange="data.checklists[${i}].done=this.checked;save()"><div class="${x.done?"done":""}"><b>${esc(x.text)}</b><div class="small">${esc(x.cat)}</div></div><button class="soft" onclick="editCheck(${i})">✏️ 編輯</button><button class="danger" onclick="deleteCheck(${i})">🗑️ 刪除</button></div>`).join("")}</div>`;
 }
+function editCheck(i){
+ const x=data.checklists?.[i];if(!x)return;const text=prompt('項目',x.text||'');if(text===null)return;const cat=prompt('分類',x.cat||'自訂');if(cat===null)return;x.text=text.trim();x.cat=cat.trim()||'自訂';save();
+}
+function deleteCheck(i){if(!data.checklists?.[i])return;if(!confirm('確定要刪除這個行前清單項目嗎？'))return;data.checklists.splice(i,1);save();}
+
 function addCheck(){let t=document.getElementById("newcheck").value.trim();if(t){data.checklists.push({id:uid(),text:t,cat:"自訂",done:false});save()}}
 
 function exportData(){
@@ -2527,7 +2629,7 @@ function exportProjectMaster(){
  let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='日本管家_專案主檔_v0.9.93.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 let tab="home";
-// v0.9.100：演唱會應援新增自訂歌單／應援功能。
+// v0.9.104：演唱會應援新增自訂歌單／應援功能。
 const GUIDE_IDS=['guide-cover','guide-plan','guide-ai','guide-sort','guide-hotel','guide-concert','guide-pilgrimage','guide-food','guide-shopping','guide-japanese','guide-tools','guide-notes','guide-transport','guide-weather','guide-backup','guide-flow','guide-japan'];
 let guideIndex=0;let guideScrollBound=false;
 function openUsageGuide(){const m=document.getElementById('usageGuideModal');if(m){m.classList.add('show');document.body.classList.add('usage-guide-open');const box=document.querySelector('.usage-guide-pages');if(box&&!guideScrollBound){box.addEventListener('scroll',syncGuideScroll,{passive:true});guideScrollBound=true;}guideGo('guide-cover',false);}}
@@ -2543,9 +2645,23 @@ function enforcePersonalBL(){
  data.pilgrimages.forEach(x=>{const c=canonicalBLWork(x.work);const base=c.replace(/\s+(?:S\d+|電影版|劇場版|電影|番外)$/,'');if(PERSONAL_BL_TITLES.has(base))x.work=c;});
  data.blCatalog=PERSONAL_BL_CATALOG.map(x=>({title:x.title,versions:[...x.versions]}));
 }
+
+// v0.9.104：整合使用者提供的東京區域圖與五組旅遊筆記，依功能放入攻略專頁。
+function tokyoGuide(){
+ const section=(id,title,body)=>`<section id="tg-${id}" class="card" style="scroll-margin-top:12px"><h2>${title}</h2>${body}</section>`;
+ return `<div class="card"><button class="back" onclick="navTo('tools')">← 返回旅行工具</button><div class="doodle">🗼 🗺️ 🍁 🍜</div><h2>🗺️ 東京旅遊攻略</h2><p class="muted">已把你提供的區域示意、三日遊、交通、住宿、美食和秋冬提醒分類整理。這是行程規劃參考，不會自動改動你已排好的行程；實際營業時間、班次、票價及花況請出發前再確認。</p><div class="explore-grid"><button class="tile" onclick="document.getElementById('tg-area')?.scrollIntoView({behavior:'smooth'})"><span>🗺️</span><b>區域與三日遊</b><span>同區域串聯、減少折返</span></button><button class="tile" onclick="document.getElementById('tg-transport')?.scrollIntoView({behavior:'smooth'})"><span>🚆</span><b>交通指南</b><span>機場進城、IC卡、通票</span></button><button class="tile" onclick="document.getElementById('tg-hotel')?.scrollIntoView({behavior:'smooth'})"><span>🏨</span><b>住宿選擇</b><span>區域差異與訂房檢查</span></button><button class="tile" onclick="document.getElementById('tg-food')?.scrollIntoView({behavior:'smooth'})"><span>🍜</span><b>秋冬美食</b><span>海鮮、蕎麥、文字燒、熱食</span></button><button class="tile" onclick="document.getElementById('tg-season')?.scrollIntoView({behavior:'smooth'})"><span>🍁</span><b>秋冬實用建議</b><span>穿搭、天黑、預約與禮儀</span></button></div></div>
+ ${section('area','🗺️ 東京區域示意與輕鬆三日遊',`<div class="notice"><b>遊玩原則</b><br>每天約 2–3 個主要停留點；同區域串聯、減少折返；雨天增加室內活動；適合第一次到東京、喜歡慢慢逛的人。不趕場、不跨城，按體力靈活刪減。</div><h3>四大區域快速分辨</h3><ul><li><b>西側｜潮流街區：</b>新宿、原宿、表參道、澀谷；適合購物、咖啡和城市漫步。</li><li><b>東側｜老城風情：</b>上野、淺草、晴空塔；適合寺社、博物館和河畔散步。</li><li><b>中部｜經典都市：</b>東京站、銀座、六本木；適合建築、展覽和夜景。</li><li><b>灣岸｜海邊視野：</b>台場、豐洲；適合海景、室內休閒，留意海風。</li></ul><h3>第一天｜東側老城</h3><ol><li><b>上午：</b>淺草寺與仲見世，慢慢逛老街。</li><li><b>下午：</b>隅田川沿岸散步，再去晴空塔周邊。</li><li><b>晚上：</b>選擇當地餐廳；觀景台按預約時間入場。</li><li><b>雨天替換：</b>縮短河畔步行，增加商場停留。</li></ol><button class="soft" onclick="navTo('spot')">📍 查看／管理景點</button><h3>第二天｜西側街區</h3><ol><li><b>上午：</b>明治神宮，感受林蔭參道。</li><li><b>下午：</b>原宿到表參道，留出午餐與咖啡時間。</li><li><b>傍晚：</b>澀谷看城市夜景，購物量力而行。</li><li><b>喜歡賞葉：</b>可用新宿御苑替換原宿購物，先查開園日與時間。</li></ol><button class="soft" onclick="navTo('spot')">📍 查看／管理景點</button><h3>第三天｜都市漫步</h3><ol><li><b>上午：</b>東京站丸之內建築群、街區拍照。</li><li><b>下午：</b>銀座逛街或選一場室內展覽。</li><li><b>晚上：</b>返回丸之內，依當季公告安排燈飾。</li><li><b>返程當天：</b>減少景點，為取行李和前往機場留足時間。</li></ol><button class="soft" onclick="navTo('plan')">🗓️ 前往我的行程</button>`)}
+ ${section('transport','🚆 東京交通指南',`<h3>機場進城｜羽田</h3><ul><li>可比較京急線、東京單軌電車或機場巴士。</li><li>去品川方向可查看京急；去濱松町可查看單軌電車。</li><li>先核對航站樓、目的站、班次與是否需要換乘。</li></ul><h3>機場進城｜成田</h3><ul><li>Skyliner 主要往日暮里、京成上野方向。</li><li>成田特快（N'EX）可銜接東京、新宿等站，依目的地查班次。</li><li>機場巴士是否直達飯店，要核對當日路線與下車站。</li></ul><h3>IC 交通卡</h3><ul><li>Suica／PASMO 可用於多種市內交通。</li><li>一般乘車刷卡方便；特急列車等可能還需要另外購買特急券／車票。</li><li>實體卡或手機卡的設定方式依設備與官方說明為準。</li></ul><h3>地鐵通票</h3><ul><li>Tokyo Subway Ticket 適用東京 Metro 與都營地鐵。</li><li>不含 JR 山手線，機場交通也不能一概視為涵蓋。</li><li>先估算實際搭乘路線與單程車費，再決定是否划算。</li></ul><h3>換乘與返程提醒</h3><ul><li>導航輸入具體車站和出口，不要只搜「新宿」或「上野」等大區域。</li><li>確認列車目的地、站台、方向與末班時間。</li><li>帶大行李優先查電梯；大型車站換乘多留時間。</li></ul><button class="primary" onclick="navTo('transport')">🚆 開啟我的交通查詢</button>`)}
+ ${section('hotel','🏨 東京住宿選擇指南',`<h3>按需求選擇區域</h3><ul><li><b>上野／淺草：</b>適合老街、博物館和傳統氛圍。上野銜接成田機場通常方便；淺草仍要看車次與飯店位置。</li><li><b>新宿／澀谷：</b>適合購物、夜生活和東京西側。大站出口多，訂房前確認最近出口與實際步行路線。</li><li><b>東京站／銀座：</b>適合購物、商務或後續搭乘新幹線。東京站地下通道複雜，帶行李要預留步行時間。</li><li><b>品川／濱松町：</b>可考慮羽田機場進出旅客；先比對航站樓、路線和末班時間。</li></ul><h3>訂房前檢查清單</h3><ol><li>盡量選距離車站步行 5–10 分鐘的飯店，並確認是哪一個出口。</li><li>確認房間面積、床寬，以及大行李箱能否攤開。</li><li>看清入住人數、兒童政策、禁煙與取消條款。</li><li>查看近期實拍評價，留意隔音、清潔和電梯。</li><li>連住可減少搬行李；旺日提早比較可取消房價。</li></ol><button class="primary" onclick="navTo('hotel')">🏨 開啟我的住宿手帳</button>`)}
+ ${section('food','🍜 東京秋冬美食指南',`<h3>壽司與海鮮丼</h3><ul><li>江戶前壽司是東京代表風味之一；豐洲、築地周邊選擇多。</li><li>看清套餐內容、營業時間和排隊規則，不必盲目追網紅店。</li></ul><h3>蕎麥麵與天婦羅</h3><ul><li>涼天可選熱蕎麥麵；天婦羅可搭配蝦、魚和季節蔬菜。</li><li>淺草老街適合安排傳統日式午餐。</li></ul><h3>月島文字燒</h3><ul><li>麵糊在鐵板上煎成軟糯口感，用小鏟取食。</li><li>月島有集中店鋪；不熟悉操作時可以請店員協助。</li></ul><h3>秋冬限定與熱食</h3><ul><li>秋季可留意栗子甜點、烤地瓜和柿子。</li><li>冷天可選關東煮、壽喜燒或鍋物，依菜單確認份量。</li></ul><h3>點餐小提醒</h3><ul><li>居酒屋可能收取小菜費（お通し），先看菜單說明。</li><li>有過敏或不吃生食，點餐前先告知店員。</li><li>熱門店可避開尖峰用餐，或提前確認是否接受預約。</li></ul><button class="primary" onclick="navTo('restaurant')">🍴 開啟我的餐廳清單</button>`)}
+ ${section('season','🍁 東京秋冬實用建議',`<ol><li>市區賞楓常見時段約在 11 月中旬至 12 月上旬，但每年依氣溫變化；出發前看即時花況。</li><li>10 月可帶薄外套；11 月增加針織層；12 月準備大衣或羽絨服，依當週天氣調整。</li><li>秋冬天黑較早，庭園和戶外拍照盡量安排白天；夜間可排燈飾或室內活動。</li><li>新宿御苑、庭園和博物館休園日不同，出發前查當天開放時間。</li><li>熱門觀景台、主題樂園和展覽可提前預約，不要完全依賴現場購票。</li><li>12 月底部分店鋪和場館可能休業，跨年行程要單獨核對營業日。</li><li>穿好走的鞋，帶潤唇膏和保濕用品，避免穿新鞋長時間步行。</li><li>部分餐廳有午間休息；電車內保持安靜，垃圾先隨身帶走。</li><li>護照隨身攜帶，另存證件備份；準備少量日圓現金和可用的支付方式。</li></ol><div class="notice">🌦️ 天氣、楓況、營業日和票券規則會變動；這份清單是出發前檢查提醒，不是即時公告。</div><button class="soft" onclick="navTo('japanNotes')">🇯🇵 開啟日本須知</button><button class="soft" onclick="navTo('check')">🧳 開啟行前清單</button>`)}
+ `;
+}
+
 function tools(){
  return `<div class="card"><button class="soft back" onclick="goBack('home')">← 返回首頁</button><div class="doodle">🧰 🇯🇵 🆘 🎤</div><h2>🧰 旅行工具</h2><p class="muted">旅途中最常用的功能都放在這裡。</p><div class="explore-grid">
  <button class="tile" onclick="navTo('support')"><span>📣</span><b>演唱會應援</b><span>預測歌單、Call、手燈、粉絲討論</span></button>
+ <button class="tile" onclick="navTo('tokyoGuide')"><span>🗺️</span><b>東京旅遊攻略</b><span>區域三日遊、交通、住宿、美食、秋冬須知</span></button>
  <button class="tile" onclick="navTo('passportSOS')"><span>🆘</span><b>SOS 旅途中緊急處理</b><span>護照／行李／被偷</span></button>
  <button class="tile" onclick="navTo('emergency')"><span>📞</span><b>緊急聯絡電話</b><span>日本緊急電話與重要聯絡方式</span></button>
  <button class="tile" onclick="navTo('dataBackup')"><span>💾</span><b>旅行資料備份</b><span>匯出／匯入你的個人資料</span></button>
@@ -2635,7 +2751,7 @@ function render(){
  enforcePersonalBL();
  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",["home","plan","phrase","explore","tools"].includes(tab)?b.dataset.tab===tab:false));
  let html=tab==="home"?home():tab==="plan"?plan():tab==="explore"?explore():tab==="tools"?tools():
- tab==="inspiration"?inspirationPage():tab==="dataBackup"?dataBackup():tab==="tripideas"?tripIdeas():tab==="restaurant"?restaurant():tab==="hotel"?hotel():tab==="park"?park():tab==="spot"?spot():tab==="pilgrimage"?pilgrimage():tab==="shopping"?shopping():tab==="souvenir"?souvenir():tab==="concert"?concert():tab==="transport"?transport():tab==="support"?support():tab==="expense"?expense():tab==="phrase"?phrase():tab==="check"?check():tab==="japanNotes"?japanNotes():tab==="emergency"?emergency():tab==="passportSOS"?passportSOS():home();
+ tab==="inspiration"?inspirationPage():tab==="dataBackup"?dataBackup():tab==="tripideas"?tripIdeas():tab==="restaurant"?restaurant():tab==="hotel"?hotel():tab==="park"?park():tab==="spot"?spot():tab==="pilgrimage"?pilgrimage():tab==="shopping"?shopping():tab==="souvenir"?souvenir():tab==="concert"?concert():tab==="transport"?transport():tab==="tokyoGuide"?tokyoGuide():tab==="support"?support():tab==="expense"?expense():tab==="phrase"?phrase():tab==="check"?check():tab==="japanNotes"?japanNotes():tab==="emergency"?emergency():tab==="passportSOS"?passportSOS():home();
  const EXPLORE_CHILD_TABS=new Set(['inspiration','tripideas','restaurant','hotel','park','spot','shopping','concert','transport']); const TOOL_CHILD_TABS=new Set(['dataBackup','emergency','passportSOS','support','expense','check','japanNotes','souvenir']); if(TOOL_CHILD_TABS.has(tab)){html=`<div style="margin-bottom:8px"><button class="soft back" onclick="navTo('tools')">← 返回工具</button></div>`+html;} else if(EXPLORE_CHILD_TABS.has(tab)){html=`<div style="margin-bottom:8px"><button class="soft back" onclick="navTo('explore')">← 返回探索</button></div>`+html;} else if(tab==='pilgrimage'){html=`<div style="margin-bottom:8px"><button class="soft back" onclick="navTo('explore')">← 返回探索</button></div>`+html;} else if(tab!=="home"&&tab!=="plan"&&tab!=="explore"&&tab!=="tools"&&!html.includes("← 返回")){html=`<div style="margin-bottom:8px"><button class="soft back" onclick="goBack('home')">← 返回</button></div>`+html;}
  document.getElementById("app").innerHTML=html;
 }
@@ -3109,6 +3225,190 @@ function attachPlannerRecButtonsV072(){
 <div id="usageGuideModal" class="usage-guide-modal" onclick="if(event.target===this)closeUsageGuide()">
 <div class="usage-guide-shell">
 <div class="usage-guide-head"><h2>📖 日本管家使用說明</h2><button class="usage-guide-close" onclick="closeUsageGuide()">✕</button></div>
-<div class="usage-guide-body"><aside class="usage-guide-toc"><button onclick="guideGo('guide-cover')">🏠 使用說明首頁</button><button onclick="guideGo('guide-plan')">🗓️ 行程</button><button onclick="guideGo('guide-ai')">🤖 AI 排程</button><button onclick="guideGo('guide-sort')">✋ 自助排序</button><button onclick="guideGo('guide-hotel')">🏨 住宿</button><button onclick="guideGo('guide-concert')">🎤 超特急／東京巨蛋</button><button onclick="guideGo('guide-pilgrimage')">📍 聖地巡禮</button><button onclick="guideGo('guide-food')">🍜 餐廳</button><button onclick="guideGo('guide-shopping')">🛍️ 購物</button><button onclick="guideGo('guide-japanese')">🇯🇵 日文</button><button onclick="guideGo('guide-tools')">🧰 旅行工具</button><button onclick="guideGo('guide-notes')">📝 日本須知</button><button onclick="guideGo('guide-transport')">🚆 交通</button><button onclick="guideGo('guide-weather')">☔ 天氣</button><button onclick="guideGo('guide-backup')">💾 旅行資料備份</button><button onclick="guideGo('guide-flow')">🧭 最推薦的使用順序</button><button onclick="guideGo('guide-japan')">🚶 到日本後</button></aside><main class="usage-guide-pages"><section class="usage-guide-page" id="guide-cover"><h3>🇯🇵 日本管家 v0.9.99</h3><p>這是一份直接放在 App 裡的旅行使用說明，不需要下載檔案。</p><div class="guide-tip">先看左側目錄；點任何項目，就會直接跳到那一頁。</div></section><section class="usage-guide-page" id="guide-plan"><h3><span class="usage-guide-index">1</span>🗓️ 行程</h3><ul><li>景點、餐廳、購物、聖地、演唱會、住宿都能加入。</li><li>一般加入行程會先選 🤖 AI 排程 或 ✋ 自助排程。</li><li>AI 會綜合地區、交通、步行、停留時間、營業時間、住宿、固定活動與體力。</li></ul></section><section class="usage-guide-page" id="guide-ai"><h3><span class="usage-guide-index">2</span>🤖 AI 排程</h3><ul><li>就算行程一開始是空白，也能從抵達地點、住宿與固定活動開始規劃。</li><li>AI 會提出建議日期與理由。</li><li>你確認後才加入，不會偷偷移動或刪除既有行程。</li></ul></section><section class="usage-guide-page" id="guide-sort"><h3><span class="usage-guide-index">3</span>✋ 自助排序</h3><ul><li>⬆️ 上移／⬇️ 下移，每次移動一格。</li><li>景點、餐廳、演唱會、入住、回飯店、退房都能排序。</li><li>排序後當天會維持展開。</li></ul></section><section class="usage-guide-page" id="guide-hotel"><h3><span class="usage-guide-index">4</span>🏨 住宿</h3><ul><li>可新增、修改住宿。</li><li>入住／回飯店／退房是獨立行程節點。</li><li>住宿位置會影響 AI 排程。</li></ul></section><section class="usage-guide-page" id="guide-concert"><h3><span class="usage-guide-index">5</span>🎤 超特急／東京巨蛋</h3><ul><li>目前固定活動：2026/11/25、11/26。</li><li>AI 會把演唱會當重要錨點，避免演唱會前安排太遠或太累。</li></ul></section><section class="usage-guide-page" id="guide-pilgrimage"><h3><span class="usage-guide-index">6</span>📍 聖地巡禮</h3><ul><li>可查看附近聖地，也可依作品查詢。</li><li>同作品 S1/S2/S3/S4、電影版、番外合併成同一作品卡。</li><li>定位不能用時，可以手動選地區／景點。</li><li>核心理念：順路就去，不為一個聖地特地橫跨東京。</li></ul></section><section class="usage-guide-page" id="guide-food"><h3><span class="usage-guide-index">7</span>🍜 餐廳</h3><ul><li>探索裡查看餐廳資料。</li><li>餐廳可以加入行程，加入時選 AI 排程或自助排程。</li></ul></section><section class="usage-guide-page" id="guide-shopping"><h3><span class="usage-guide-index">8</span>🛍️ 購物</h3><ul><li>可記錄假面騎士變身器、扭蛋、零食、伴手禮、EBiDAN、超特急周邊等。</li><li>購物項目也可以加入行程。</li><li>保留你的購物整理連結。</li></ul></section><section class="usage-guide-page" id="guide-japanese"><h3><span class="usage-guide-index">9</span>🇯🇵 日文</h3><ul><li>旅行用日文小抄：車站、餐廳、購物、問路、住宿、緊急情況。</li><li>可新增自己的常用句子。</li><li>可使用日文朗讀。</li><li>⚠️ 對話翻譯已移除。</li></ul></section><section class="usage-guide-page" id="guide-tools"><h3><span class="usage-guide-index">10</span>🧰 旅行工具</h3><ul><li>🎤 演唱會應援</li><li>🆘 SOS 旅途中緊急處理</li><li>📞 緊急聯絡電話</li><li>💾 旅行資料備份</li><li>💰 旅費記帳</li><li>🧳 行前清單</li></ul></section><section class="usage-guide-page" id="guide-notes"><h3><span class="usage-guide-index">11</span>📝 日本須知</h3><ul><li>⛩️ 日本神社參拜</li><li>🛍️ 日本購物須知</li><li>🇯🇵 日本文化</li><li>📝 我的日本須知</li><li>可以新增、編輯、刪除自己的須知。</li></ul></section><section class="usage-guide-page" id="guide-transport"><h3><span class="usage-guide-index">12</span>🚆 交通</h3><ul><li>東京 Metro 路線圖、JR 東日本路線圖、自訂交通與查交通。</li><li>需要即時路線、班次、出口時，再開 Google Maps。</li><li>目標是讓你不熟東京電車也能照著走。</li></ul></section><section class="usage-guide-page" id="guide-weather"><h3><span class="usage-guide-index">13</span>☔ 天氣</h3><ul><li>首頁可查看東京天氣。</li><li>可切換東京、三麗鷗彩虹樂園、東京巨蛋、池袋、秋葉原、原宿、飯田橋、淺草。</li><li>出發前可依天氣調整戶外行程。</li></ul></section><section class="usage-guide-page" id="guide-backup"><h3><span class="usage-guide-index">14</span>💾 旅行資料備份</h3><ul><li>個人旅行資料與 App 程式分開保存。</li><li>可匯出旅行資料；換版本或需要恢復時可匯入。</li><li>建議重要修改後定期備份。</li></ul></section><section class="usage-guide-page" id="guide-flow"><h3><span class="usage-guide-index">15</span>🧭 最推薦的使用順序</h3><ul><li>① 填住宿</li><li>② 填超特急／東京巨蛋固定活動</li><li>③ 填抵達與回程機場</li><li>④ 把想去的景點／餐廳／購物／聖地先加入</li><li>⑤ 讓 AI 排程</li><li>⑥ 不滿意再手動調整</li></ul></section><section class="usage-guide-page" id="guide-japan"><h3><span class="usage-guide-index">16</span>🚶 到日本後</h3><ul><li>需要搭車 → 🚆 交通</li><li>不知道附近有什麼 → 📍 附近聖地</li><li>想買東西 → 🛍️ 購物清單</li><li>需要日文 → 🇯🇵 日文小抄</li><li>遇到問題 → 🆘 SOS／緊急電話</li></ul></section><div class="usage-guide-nav"><button id="guidePrevBtn" onclick="guidePrev()">最前面</button><button id="guideNextBtn" onclick="guideNext()">下一頁 →</button></div></main></div>
-</div></div></body>
+<div class="usage-guide-body"><aside class="usage-guide-toc"><button onclick="guideGo('guide-cover')">🏠 使用說明首頁</button><button onclick="guideGo('guide-plan')">🗓️ 行程</button><button onclick="guideGo('guide-ai')">🤖 AI 排程</button><button onclick="guideGo('guide-sort')">✋ 自助排序</button><button onclick="guideGo('guide-hotel')">🏨 住宿</button><button onclick="guideGo('guide-concert')">🎤 超特急／東京巨蛋</button><button onclick="guideGo('guide-pilgrimage')">📍 聖地巡禮</button><button onclick="guideGo('guide-food')">🍜 餐廳</button><button onclick="guideGo('guide-shopping')">🛍️ 購物</button><button onclick="guideGo('guide-japanese')">🇯🇵 日文</button><button onclick="guideGo('guide-tools')">🧰 旅行工具</button><button onclick="guideGo('guide-notes')">📝 日本須知</button><button onclick="guideGo('guide-transport')">🚆 交通</button><button onclick="guideGo('guide-weather')">☔ 天氣</button><button onclick="guideGo('guide-backup')">💾 旅行資料備份</button><button onclick="guideGo('guide-flow')">🧭 最推薦的使用順序</button><button onclick="guideGo('guide-japan')">🚶 到日本後</button></aside><main class="usage-guide-pages"><section class="usage-guide-page" id="guide-cover"><h3>🇯🇵 日本管家 v0.9.107</h3><p>這是一份直接放在 App 裡的旅行使用說明，不需要下載檔案。</p><div class="guide-tip">先看左側目錄；點任何項目，就會直接跳到那一頁。</div></section><section class="usage-guide-page" id="guide-plan"><h3><span class="usage-guide-index">1</span>🗓️ 行程</h3><ul><li>景點、餐廳、購物、聖地、演唱會、住宿都能加入。</li><li>一般加入行程會先選 🤖 AI 排程 或 ✋ 自助排程。</li><li>AI 會綜合地區、交通、步行、停留時間、營業時間、住宿、固定活動與體力。</li></ul></section><section class="usage-guide-page" id="guide-ai"><h3><span class="usage-guide-index">2</span>🤖 AI 排程</h3><ul><li>就算行程一開始是空白，也能從抵達地點、住宿與固定活動開始規劃。</li><li>AI 會提出建議日期與理由。</li><li>東京迪士尼樂園視為整日型高體力活動，優先獨立安排，避免和東京巨蛋演唱會同日。</li><li>雨天、營業時間、預約狀態與季節建議需在出發前再核對。</li><li>你確認後才加入，不會偷偷移動或刪除既有行程。</li></ul></section><section class="usage-guide-page" id="guide-sort"><h3><span class="usage-guide-index">3</span>✋ 自助排序</h3><ul><li>⬆️ 上移／⬇️ 下移，每次移動一格。</li><li>景點、餐廳、演唱會、入住、回飯店、退房都能排序。</li><li>排序後當天會維持展開。</li></ul></section><section class="usage-guide-page" id="guide-hotel"><h3><span class="usage-guide-index">4</span>🏨 住宿</h3><ul><li>可新增、修改住宿。</li><li>入住／回飯店／退房是獨立行程節點。</li><li>住宿位置會影響 AI 排程。</li></ul></section><section class="usage-guide-page" id="guide-concert"><h3><span class="usage-guide-index">5</span>🎤 超特急／東京巨蛋</h3><ul><li>目前固定活動：2026/11/25、11/26。</li><li>AI 會把演唱會當重要錨點，避免演唱會前安排太遠或太累。</li></ul></section><section class="usage-guide-page" id="guide-pilgrimage"><h3><span class="usage-guide-index">6</span>📍 聖地巡禮</h3><ul><li>可查看附近聖地，也可依作品查詢。</li><li>同作品 S1/S2/S3/S4、電影版、番外合併成同一作品卡。</li><li>定位不能用時，可以手動選地區／景點。</li><li>核心理念：順路就去，不為一個聖地特地橫跨東京。</li></ul></section><section class="usage-guide-page" id="guide-food"><h3><span class="usage-guide-index">7</span>🍜 餐廳</h3><ul><li>探索裡查看餐廳資料。</li><li>餐廳可以加入行程，加入時選 AI 排程或自助排程。</li></ul></section><section class="usage-guide-page" id="guide-shopping"><h3><span class="usage-guide-index">8</span>🛍️ 購物</h3><ul><li>可記錄假面騎士變身器、扭蛋、零食、伴手禮、EBiDAN、超特急周邊等。</li><li>購物項目也可以加入行程。</li><li>保留你的購物整理連結。</li></ul></section><section class="usage-guide-page" id="guide-japanese"><h3><span class="usage-guide-index">9</span>🇯🇵 日文</h3><ul><li>旅行用日文小抄：車站、餐廳、購物、問路、住宿、緊急情況。</li><li>可新增自己的常用句子。</li><li>可使用日文朗讀。</li><li>⚠️ 對話翻譯已移除。</li></ul></section><section class="usage-guide-page" id="guide-tools"><h3><span class="usage-guide-index">10</span>🧰 旅行工具</h3><ul><li>🎤 演唱會應援</li><li>🆘 SOS 旅途中緊急處理</li><li>📞 緊急聯絡電話</li><li>💾 旅行資料備份</li><li>💰 旅費記帳</li><li>🧳 行前清單</li></ul></section><section class="usage-guide-page" id="guide-notes"><h3><span class="usage-guide-index">11</span>📝 日本須知</h3><ul><li>⛩️ 日本神社參拜</li><li>🛍️ 日本購物須知</li><li>🇯🇵 日本文化</li><li>📝 我的日本須知</li><li>可以新增、編輯、刪除自己的須知。</li></ul></section><section class="usage-guide-page" id="guide-transport"><h3><span class="usage-guide-index">12</span>🚆 交通</h3><ul><li>東京 Metro 路線圖、JR 東日本路線圖、自訂交通與查交通。</li><li>需要即時路線、班次、出口時，再開 Google Maps。</li><li>目標是讓你不熟東京電車也能照著走。</li></ul></section><section class="usage-guide-page" id="guide-weather"><h3><span class="usage-guide-index">13</span>☔ 天氣</h3><ul><li>首頁可查看東京天氣。</li><li>可切換東京、舞濱／東京迪士尼樂園、東京巨蛋、池袋、秋葉原、原宿、飯田橋、淺草。</li><li>出發前可依天氣調整戶外行程。</li></ul></section><section class="usage-guide-page" id="guide-backup"><h3><span class="usage-guide-index">14</span>💾 旅行資料備份</h3><ul><li>個人旅行資料與 App 程式分開保存。</li><li>可匯出旅行資料；換版本或需要恢復時可匯入。</li><li>建議重要修改後定期備份。</li></ul></section><section class="usage-guide-page" id="guide-flow"><h3><span class="usage-guide-index">15</span>🧭 最推薦的使用順序</h3><ul><li>① 填住宿</li><li>② 填超特急／東京巨蛋固定活動</li><li>③ 填抵達與回程機場</li><li>④ 把想去的景點／餐廳／購物／聖地先加入</li><li>⑤ 讓 AI 排程</li><li>⑥ 不滿意再手動調整</li></ul></section><section class="usage-guide-page" id="guide-japan"><h3><span class="usage-guide-index">16</span>🚶 到日本後</h3><ul><li>需要搭車 → 🚆 交通</li><li>不知道附近有什麼 → 📍 附近聖地</li><li>想買東西 → 🛍️ 購物清單</li><li>需要日文 → 🇯🇵 日文小抄</li><li>遇到問題 → 🆘 SOS／緊急電話</li></ul></section><div class="usage-guide-nav"><button id="guidePrevBtn" onclick="guidePrev()">最前面</button><button id="guideNextBtn" onclick="guideNext()">下一頁 →</button></div></main></div>
+</div></div>
+<script>
+// v0.9.107：依使用者最新確認更新住宿、航班機場與 11/26 場週領取固定行程。
+(function applyConfirmedTripUpdateV106(){
+  try {
+    if (typeof data==='undefined' || !Array.isArray(data.plans)) return;
+    const marker='tokyoTripUpdateV106';
+    if (localStorage.getItem(marker)==='done') return;
+    const uidV106=()=> 'v106-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);
+    data.start='2026-11-22';
+    data.end='2026-11-28';
+    data.settings=data.settings||{};
+    data.settings.arrivalAirport='成田機場';
+    data.settings.returnAirport='成田機場';
+    data.settings.tripAnchorsV104=data.settings.tripAnchorsV104||{};
+    Object.assign(data.settings.tripAnchorsV104,{
+      arrivalDate:'2026-11-22',arrivalAirport:'成田機場',
+      hotels:[
+        {date:'2026-11-22',nights:5,name:'KOKO Hotel 後樂園'},
+        {date:'2026-11-27',nights:1,name:'上野百夫長飯店'}
+      ],
+      disney:{date:'2026-11-23',name:'東京迪士尼樂園',fullDay:true},
+      concerts:['2026-11-25','2026-11-26'],
+      merchandise:{date:'2026-11-26',time:'13:30',name:'超特急 東京巨蛋場週周邊領取'},
+      finalNight:{date:'2026-11-27',status:'已確認住宿',name:'上野百夫長飯店',preferredArea:'上野',reason:'使用者已確認 11/27～11/28 入住上野百夫長飯店。'},
+      returnDate:'2026-11-28',returnAirport:'成田機場',flightTime:'19:45（成田 T1 起飛）'
+    });
+    // 航班已由前版確認，確保回程機場及時間錨點一致。
+    data.flights=data.flights||data.settings.tripAnchorsV104.flights||{};
+    if(data.flights.inbound){data.flights.inbound.date='2026-11-28';data.flights.inbound.from='東京成田國際機場 T1';data.flights.inbound.fromCode='NRT';data.flights.inbound.departure='19:45';}
+    // 使用者最新確認的兩段住宿：不再保留先前過時的 the b、Hop Inn、東橫 INN 等住宿。
+    const hotels=[
+      {id:'hotel-v106-koko',name:'KOKO Hotel 後樂園',address:'KOKO HOTEL 後樂園, Tokyo, Japan',phone:'',checkin:'2026-11-22 15:00後',checkout:'2026-11-27 11:00前',booking:'',note:'已確認住宿｜2026/11/22～11/27，共 5 晚。',seed:'user-v106'},
+      {id:'hotel-v106-centurion',name:'上野百夫長飯店（Centurion Hotel Ueno）',address:'2-3-4 Ueno, Taito-ku, Tokyo 110-0005, Japan',phone:'',checkin:'2026-11-27 15:00後',checkout:'2026-11-28 11:00前',booking:'',note:'已確認住宿｜2026/11/27～11/28，共 1 晚。',seed:'user-v106'}
+    ];
+    data.hotels=hotels;
+    data.hotel=hotels[0];
+    // 移除舊住宿相關行程節點，其他景點／餐廳／購物／演唱會行程完全保留。
+    data.plans=data.plans.filter(p=>{
+      const d=String(p.date||'');
+      const lodgingType=/住宿|回飯店|入住|退房/.test(String(p.type||'')) || !!p.hotelEvent || !!p.hotelId;
+      const oldName=/the b suidobashi|Hop Inn Tokyo Iidabashi|東橫INN|東横INN|上野百夫長|Centurion Hotel Ueno|KOKO Hotel 後樂園/i.test(String(p.name||''));
+      return !(lodgingType && d>='2026-11-22' && d<='2026-11-28') && !(oldName && d>='2026-11-22' && d<='2026-11-28');
+    });
+    // 建立入住、退房節點，讓每日行程與住宿資料同步。
+    const hotelEvents=[
+      {id:'plan-v106-koko-in',hotelId:hotels[0].id,date:'2026-11-22',time:'15:00',name:'🏨 入住｜KOKO Hotel 後樂園',type:'住宿入住',loc:hotels[0].address,note:'入住 KOKO Hotel 後樂園｜本次住宿 11/22～11/27。',done:false,important:true,manualOrder:1763823600000},
+      {id:'plan-v106-koko-out',hotelId:hotels[0].id,date:'2026-11-27',time:'11:00',name:'🚪 退房｜KOKO Hotel 後樂園',type:'住宿退房',loc:hotels[0].address,note:'退房後前往上野百夫長飯店；可先確認是否能寄放行李。',done:false,important:true,manualOrder:1764231600000},
+      {id:'plan-v106-centurion-in',hotelId:hotels[1].id,date:'2026-11-27',time:'15:00',name:'🏨 入住｜上野百夫長飯店',type:'住宿入住',loc:hotels[1].address,note:'入住上野百夫長飯店｜11/27～11/28 一晚。',done:false,important:true,manualOrder:1764246000000},
+      {id:'plan-v106-centurion-out',hotelId:hotels[1].id,date:'2026-11-28',time:'11:00',name:'🚪 退房｜上野百夫長飯店',type:'住宿退房',loc:hotels[1].address,note:'退房後前往成田機場；回程酷航 TR875，19:45 成田 T1 起飛。',done:false,important:true,manualOrder:1764327600000}
+    ];
+    data.plans.push(...hotelEvents);
+    // 11/26 13:30 領取場週周邊，作為固定時間行程；若已存在同類項目則更新而不重複新增。
+    let merch=data.plans.find(p=>p.date==='2026-11-26' && /場週|場周|周邊領取|物販領取/.test(String(p.name||'')));
+    if(!merch){merch={id:'plan-v106-merch',date:'2026-11-26',time:'13:30',name:'超特急 東京巨蛋場週周邊領取',type:'購物',loc:'東京巨蛋／東京巨蛋城 場週周邊領取處',note:'固定時間：13:30 領取演唱會場週周邊。請預留排隊與領取時間，領取地點依官方電子整理券／通知為準。',done:false,important:true,fixedEvent:true,anchor:'merchandise',manualOrder:1764163800000};data.plans.push(merch);}
+    else {merch.time='13:30';merch.name='超特急 東京巨蛋場週周邊領取';merch.type='購物';merch.loc=merch.loc||'東京巨蛋／東京巨蛋城 場週周邊領取處';merch.note=(merch.note||'')+'｜固定時間 13:30，請依官方通知確認實際領取位置。';merch.important=true;merch.fixedEvent=true;merch.anchor='merchandise';}
+    try{localStorage.setItem('tokyoTravel_v04',JSON.stringify(data));if(typeof personalSnapshot==='function')localStorage.setItem('tokyoTravel_personal_v1',JSON.stringify(personalSnapshot()));localStorage.setItem(marker,'done');}catch(e){}
+    if(typeof render==='function')render();
+  } catch(err) { console.error('v0.9.107 trip update failed',err); }
+})();
+</script>
+
+
+<script>
+// v0.9.107：將成田機場正式加入第一天抵達與最後一天回程行程。
+(function addNaritaAirportToFirstAndLastDayV107(){
+  try {
+    if (typeof data==='undefined' || !Array.isArray(data.plans)) return;
+    const marker='tokyoNaritaAirportDaysV107';
+    if (localStorage.getItem(marker)==='done') return;
+    const ensureAirportPlan=(date,time,name,note,seed)=>{
+      let item=data.plans.find(p=>p.date===date && /成田機場|成田国際空港|Narita International Airport/i.test(String(p.name||'')+' '+String(p.loc||'')));
+      if(!item){
+        item={id:seed,date,time,name,type:'交通',loc:'東京成田國際機場 T1（Narita International Airport Terminal 1, NRT）',note,done:false,important:true,fixedEvent:true,anchor:seed,manualOrder:Date.parse(date+'T'+time+':00')};
+        data.plans.push(item);
+      } else {
+        item.time=time;
+        item.name=name;
+        item.type='交通';
+        item.loc='東京成田國際機場 T1（Narita International Airport Terminal 1, NRT）';
+        item.note=note;
+        item.important=true;
+        item.fixedEvent=true;
+        item.anchor=seed;
+      }
+    };
+    ensureAirportPlan('2026-11-22','10:55','✈️ 抵達｜成田機場（Scoot TR866）','去程航班 Scoot TR866：06:50 桃園 T1 起飛，10:55 抵達成田 T1。抵達後辦理入境、領取行李，再前往東京市區。', 'narita-arrival-v107');
+    ensureAirportPlan('2026-11-28','19:45','✈️ 成田機場｜回程搭機（Scoot TR875）','回程航班 Scoot TR875：19:45 成田 T1 起飛，22:55 抵達桃園 T1。請預留前往機場、報到、托運與安檢時間。', 'narita-departure-v107');
+    data.start='2026-11-22';
+    data.end='2026-11-28';
+    data.settings=data.settings||{};
+    data.settings.arrivalAirport='成田機場';
+    data.settings.returnAirport='成田機場';
+    try {
+      localStorage.setItem('tokyoTravel_v04',JSON.stringify(data));
+      if(typeof personalSnapshot==='function') localStorage.setItem('tokyoTravel_personal_v1',JSON.stringify(personalSnapshot()));
+      localStorage.setItem(marker,'done');
+    } catch(e) {}
+    if(typeof render==='function') render();
+  } catch(err) { console.error('v0.9.107 airport schedule update failed',err); }
+})();
+</script>
+
+<script>
+/* v0.9.108：修正 11/22 首日順序。抵達成田後才前往 KOKO Hotel。 */
+(function(){
+  try {
+    const KEY='tokyoTravel_v04';
+    const MARK='tokyo_v098_first_day_order_v108';
+    if(localStorage.getItem(MARK)==='done') return;
+    let d=(typeof data!=='undefined' && data && Array.isArray(data.plans)) ? data : null;
+    if(!d){ const raw=localStorage.getItem(KEY); if(raw) d=JSON.parse(raw); }
+    if(!d || !Array.isArray(d.plans)) return;
+    const arrival=d.plans.find(p=>p.date==='2026-11-22' && /成田機場.*TR866|TR866.*成田機場|抵達.*成田機場/.test(String(p.name||'')));
+    const hotel=d.plans.find(p=>p.date==='2026-11-22' && /KOKO Hotel 後樂園/.test(String(p.name||'')) && /住宿入住|入住/.test(String(p.type||'')+' '+String(p.name||'')));
+    if(arrival){
+      arrival.time='10:55';
+      arrival.manualOrder=Date.parse('2026-11-22T10:55:00+09:00');
+      arrival.note='去程酷航 Scoot TR866：06:50 桃園 T1 起飛，10:55 抵達東京成田 T1。先辦理入境、領取行李，再前往 KOKO Hotel 後樂園。';
+      arrival.important=true; arrival.fixedEvent=true;
+    }
+    if(hotel){
+      hotel.time='15:00';
+      hotel.manualOrder=Date.parse('2026-11-22T15:00:00+09:00');
+      hotel.note='抵達成田機場、完成入境及領取行李後，前往 KOKO Hotel 後樂園辦理入住；住宿期間 11/22～11/27。';
+      hotel.important=true;
+    }
+    // 將首日其他節點保留在兩個固定節點之後，並以原時間排序基準避免舊版 2025 年時間戳壓過 2026 年機場資料。
+    d.plans.filter(p=>p.date==='2026-11-22' && p!==arrival && p!==hotel).forEach(p=>{
+      if(/回飯店|住宿入住/.test(String(p.type||'')) && /KOKO Hotel 後樂園/.test(String(p.name||''))) p.manualOrder=Date.parse('2026-11-22T15:00:00+09:00')+1;
+      else if(!Number.isFinite(Number(p.manualOrder)) || Number(p.manualOrder)<Date.parse('2026-11-22T00:00:00+09:00')) {
+        const t=/^\d{2}:\d{2}$/.test(String(p.time||''))?p.time:'16:00';
+        p.manualOrder=Date.parse('2026-11-22T'+t+':00+09:00');
+      }
+    });
+    try { localStorage.setItem(KEY,JSON.stringify(d)); } catch(e) {}
+    localStorage.setItem(MARK,'done');
+    if(typeof render==='function') render();
+    if(typeof save==='function') save();
+  } catch(e) { console.error('v0.9.108 first-day order migration failed',e); }
+})();
+</script>
+
+
+<script>
+/* v0.9.109：確認去回程成田機場皆搭京成 Skyliner，補上兩端交通指引。 */
+(function updateSkylinerBothWaysV109(){
+  try {
+    const KEY='tokyoTravel_v04', MARK='tokyo_v098_skyliner_both_ways_v109';
+    if(localStorage.getItem(MARK)==='done') return;
+    let d=(typeof data!=='undefined' && data && Array.isArray(data.plans)) ? data : null;
+    if(!d){const raw=localStorage.getItem(KEY);if(raw)d=JSON.parse(raw);}
+    if(!d || !Array.isArray(d.plans)) return;
+    const find=(date,rx)=>d.plans.find(p=>p.date===date && rx.test(String(p.name||'')+' '+String(p.loc||'')));
+    const arrival=find('2026-11-22',/成田機場.*TR866|TR866.*成田機場|抵達.*成田機場/);
+    const hotel=find('2026-11-22',/KOKO Hotel 後樂園/);
+    const departure=find('2026-11-28',/成田機場.*TR875|TR875.*成田機場|回程搭機/);
+    const finalHotel=find('2026-11-28',/上野百夫長飯店|Centurion Hotel Ueno/);
+    if(arrival){
+      arrival.note='去程 Scoot TR866：06:50 桃園 T1 起飛，10:55 抵達成田 T1。入境、領行李後，搭京成 Skyliner（成田機場第1航廈站）前往京成上野站；抵達後再依即時地圖搭乘市區交通／步行前往 KOKO Hotel 後樂園。Skyliner 是機場至東京市區的指定席列車，請確認乘車方向為「京成上野」。';
+      arrival.transport='京成 Skyliner：成田機場第1航廈 → 京成上野';
+      arrival.important=true; arrival.fixedEvent=true;
+    }
+    if(hotel){
+      hotel.note='由成田機場搭京成 Skyliner 抵達京成上野站後，再前往 KOKO Hotel 後樂園辦理入住；住宿期間 11/22～11/27。';
+    }
+    if(departure){
+      departure.note='回程 Scoot TR875：19:45 成田 T1 起飛，22:55 抵達桃園 T1。從上野百夫長飯店出發，前往京成上野站，搭京成 Skyliner 直達成田機場第1航廈站，再辦理報到、托運及安檢。請預留從飯店到車站、取票／進站及機場報到時間，並以當日班次為準。';
+      departure.transport='京成 Skyliner：京成上野 → 成田機場第1航廈';
+      departure.important=true; departure.fixedEvent=true;
+    }
+    if(finalHotel){
+      finalHotel.note='11/27～11/28 入住。11/28 退房後可寄放行李（請向飯店確認），前往京成上野站搭京成 Skyliner 直達成田機場第1航廈，搭乘 19:45 的 Scoot TR875。';
+    }
+    d.settings=d.settings||{};
+    d.settings.airportTransfer='去回程成田機場皆搭乘京成 Skyliner；去程成田機場第1航廈→京成上野，回程京成上野→成田機場第1航廈。';
+    try{localStorage.setItem(KEY,JSON.stringify(d));if(typeof personalSnapshot==='function')localStorage.setItem('tokyoTravel_personal_v1',JSON.stringify(personalSnapshot()));}catch(e){}
+    localStorage.setItem(MARK,'done');
+    if(typeof render==='function')render();
+    if(typeof save==='function')save();
+  }catch(e){console.error('v0.9.109 Skyliner update failed',e);}
+})();
+</script>
+
+</body>
 </html>
